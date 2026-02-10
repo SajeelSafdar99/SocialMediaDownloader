@@ -1,0 +1,472 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Mode Colors - Extracted from design reference */
+  --background: hsl(0, 0%, 98%);
+  --foreground: hsl(222, 47%, 11%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 47%, 11%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 47%, 11%);
+  --primary: hsl(260, 85%, 58%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(142, 76%, 36%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --accent: hsl(25, 95%, 53%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --ring: hsl(260, 85%, 58%);
+  --chart-1: hsl(260, 85%, 58%);
+  --chart-2: hsl(142, 76%, 36%);
+  --chart-3: hsl(25, 95%, 53%);
+  --chart-4: hsl(147, 78%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  --sidebar: hsl(180, 7%, 97%);
+  --sidebar-foreground: hsl(222, 47%, 11%);
+  --sidebar-primary: hsl(260, 85%, 58%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(211, 51%, 93%);
+  --sidebar-accent-foreground: hsl(260, 85%, 58%);
+  --sidebar-border: hsl(205, 25%, 91%);
+  --sidebar-ring: hsl(260, 85%, 58%);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Dark Mode Colors - Extracted from design reference */
+  --background: hsl(222, 47%, 11%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222, 47%, 15%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222, 47%, 15%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(260, 75%, 65%);
+  --primary-foreground: hsl(222, 47%, 11%);
+  --secondary: hsl(142, 66%, 45%);
+  --secondary-foreground: hsl(222, 47%, 11%);
+  --muted: hsl(217, 33%, 17%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --accent: hsl(25, 85%, 60%);
+  --accent-foreground: hsl(222, 47%, 11%);
+  --destructive: hsl(0, 74%, 65%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217, 33%, 24%);
+  --input: hsl(217, 33%, 24%);
+  --ring: hsl(260, 75%, 65%);
+  --sidebar: hsl(222, 47%, 15%);
+  --sidebar-foreground: hsl(210, 40%, 98%);
+  --sidebar-primary: hsl(260, 75%, 65%);
+  --sidebar-primary-foreground: hsl(222, 47%, 11%);
+  --sidebar-accent: hsl(217, 33%, 17%);
+  --sidebar-accent-foreground: hsl(260, 75%, 65%);
+  --sidebar-border: hsl(217, 33%, 24%);
+  --sidebar-ring: hsl(260, 75%, 65%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Design Reference Gradient Classes - Exact from HTML */
+.gradient-primary {
+  background: linear-gradient(135deg, hsl(260, 85%, 58%) 0%, hsl(220, 90%, 56%) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, hsl(260, 85%, 58%) 0%, hsl(220, 90%, 56%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, hsl(260, 85%, 58% / 0.1) 0%, hsl(220, 90%, 56% / 0.1) 100%);
+}
+
+/* Component Animations - From Design Reference */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px hsl(260, 85%, 58% / 0.15), 0 10px 10px -5px hsl(260, 85%, 58% / 0.05);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, hsl(260, 85%, 58%) 0%, hsl(220, 90%, 56%) 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px hsl(260, 85%, 58% / 0.3);
+}
+
+/* Pulse Animation for Premium Features - From Design Reference */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 hsl(260, 85%, 58% / 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px hsl(260, 85%, 58% / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(260, 85%, 58% / 0);
+  }
+}
+
+.pulse-animation {
+  animation: pulse-ring 2s infinite;
+}
+
+/* Progress Bar Animation - From Design Reference */
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* Ad Zone Styling for Free Tier - From Design Reference */
+.ad-zone {
+  background: hsl(var(--muted));
+  border: 1px dashed hsl(var(--border));
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Skeleton Loading Animation - From Design Reference */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--background)) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+/* Platform-specific gradient backgrounds */
+.instagram-gradient {
+  background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+}
+
+.tiktok-gradient {
+  background: linear-gradient(45deg, #25f4ee 0%, #00f2ea 50%, #ff0050 100%);
+}
+
+.youtube-gradient {
+  background: linear-gradient(45deg, #ff0000 0%, #cc0000 100%);
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 640px) {
+  .hero-gradient {
+    padding: 2rem 0;
+  }
+  
+  .gradient-text {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+}
+
+/* Mobile-specific fixes for input and button interaction */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix iOS input zoom */
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  /* Ensure icons don't block input */
+  .pointer-events-none {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Better button press feedback on mobile */
+  button:active,
+  .btn-primary:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+
+  /* Prevent double-tap zoom on buttons */
+  button,
+  .btn-primary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* Fix for position sticky on iOS */
+  @supports (-webkit-touch-callout: none) {
+    input {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+  }
+}
+
+/* Focus Styles for Accessibility */
+.focus\:ring-2:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+/* PWA Install Prompt Styles - From Design Reference */
+.pwa-prompt {
+  backdrop-filter: blur(8px);
+  background: hsl(var(--card) / 0.95);
+  border: 1px solid hsl(var(--border));
+}
+
+/* Social Share Button Hover Effects - From Design Reference */
+.social-share-btn {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.social-share-btn:hover {
+  transform: translateY(-2px);
+  background: hsl(255, 255%, 255% / 0.3);
+}
+
+/* FAQ Accordion Styles */
+details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details[open] summary {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Custom Scrollbar for Better UX */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Additional Design Reference Styles */
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.card {
+  border-radius: var(--radius);
+}
+
+/* Smooth transitions for all interactive elements */
+button, .btn, a[role="button"] {
+  transition: all 0.3s ease;
+}
+
+/* Enhanced button states */
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Enhanced card shadows */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px hsl(var(--foreground) / 0.25);
+}
+
+/* Dark mode specific adjustments */
+.dark .shadow-2xl {
+  box-shadow: 0 25px 50px -12px hsl(0, 0%, 0% / 0.5);
+}
+
+/* Platform-specific button styles */
+.platform-instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.platform-tiktok {
+  background: linear-gradient(45deg, #25f4ee 0%, #00f2ea 50%, #ff0050 100%);
+}
+
+.platform-youtube {
+  background: linear-gradient(45deg, #ff0000 0%, #cc0000 100%);
+}
+
+/* Ensure proper contrast for all text */
+.text-on-primary {
+  color: hsl(var(--primary-foreground));
+}
+
+.text-on-secondary {
+  color: hsl(var(--secondary-foreground));
+}
+
+/* Modern glassmorphism effects */
+.glass {
+  backdrop-filter: blur(10px);
+  background: hsl(var(--card) / 0.8);
+  border: 1px solid hsl(var(--border) / 0.2);
+}
+
+/* Enhanced premium features styling */
+.premium-badge {
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent)) 100%);
+  color: hsl(var(--accent-foreground));
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Download progress styling */
+.download-progress {
+  background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  border-radius: 9999px;
+  height: 0.75rem;
+}
+
+/* Error and success states */
+.status-success {
+  color: hsl(var(--secondary));
+  background: hsl(var(--secondary) / 0.1);
+}
+
+.status-error {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.1);
+}
+
+.status-pending {
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+}
+
+/* Mobile-first responsive enhancements */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 3rem 1rem;
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .btn-mobile {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-primary {
+    border: 2px solid hsl(var(--foreground));
+  }
+  
+  .card {
+    border: 2px solid hsl(var(--border));
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover {
+    transform: none;
+  }
+  
+  .btn-primary:hover {
+    transform: none;
+  }
+  
+  .pulse-animation {
+    animation: none;
+  }
+  
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .btn, .button {
+    display: none;
+  }
+  
+  .hero-gradient {
+    background: none;
+  }
+  
+  * {
+    color: black !important;
+    background: white !important;
+  }
+}

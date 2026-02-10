@@ -1,0 +1,155 @@
+App MVP: SecureVPN (React Native)
+🎯 Core Objective
+
+A simple and fast VPN app that allows users to:
+
+Connect to secure VPN servers
+
+Hide their IP
+
+Bypass geo-restrictions
+While offering:
+
+Free tier with limited bandwidth or ads
+
+Premium subscription for ad-free, faster, unlimited VPN
+
+🧩 Tech Stack
+
+Frontend: React Native (Expo or CLI)
+
+Backend: Node.js + Express (for API and server management)
+
+VPN Protocol Integration: OpenVPN or WireGuard SDK (via native bridge or 3rd-party API like VPN API Cloud
+)
+
+Database: Firebase / MongoDB Atlas
+
+Authentication: Firebase Auth (email + Google/Apple Sign-In)
+
+Payments / Subscriptions:
+
+Android: Google Play Billing Library
+
+iOS: StoreKit
+
+Use react-native-iap for unified integration
+
+Ads: Google AdMob (react-native-google-mobile-ads)
+
+🧠 MVP Features Breakdown
+1. Onboarding & Authentication
+
+Welcome screen with app benefits
+
+Sign in/up with Google or Apple ID
+
+Guest mode (optional for testing the free tier)
+
+2. Home Screen
+
+Button: “Connect” / “Disconnect”
+
+Dropdown list of available countries/servers
+
+Connection status indicator (Connected / Disconnected)
+
+Ping speed display (optional)
+
+3. VPN Connection
+
+Uses native module for connecting to VPN
+
+Free users get limited servers (e.g., 2–3)
+
+Premium users get full access
+
+4. Ad Integration (AdMob)
+
+Banner ads on free-tier home screen
+
+Interstitial ads before connection (only for free users)
+
+No ads for premium subscribers
+
+5. Subscription System
+
+“Upgrade to Premium” button
+
+Monthly / Yearly options
+
+Managed through in-app purchases using react-native-iap
+
+Backend verifies receipts for validation
+
+Premium users enjoy:
+
+No ads
+
+Faster servers
+
+Unlimited data
+
+6. Settings Screen
+
+Account details (email, subscription status)
+
+Manage subscription
+
+Language preference
+
+About, Terms, Privacy Policy
+
+7. Backend Features
+
+Authentication verification
+
+Subscription status sync
+
+VPN server configuration endpoint
+
+Analytics (optional with Firebase)
+
+💰 Monetization Model
+Tier	Features	Monetization
+Free	Limited servers, Ads, Speed limit	AdMob revenue
+Premium	All servers, No ads, Full speed	Subscription via Google/Apple
+🧱 Folder Structure Example
+/src
+  /components
+    - ButtonConnect.js
+    - ServerList.js
+  /screens
+    - LoginScreen.js
+    - HomeScreen.js
+    - SubscriptionScreen.js
+    - SettingsScreen.js
+  /services
+    - vpnService.js
+    - authService.js
+    - adsService.js
+    - subscriptionService.js
+  /store
+    - userSlice.js
+    - vpnSlice.js
+  App.js
+
+🔐 Security Basics
+
+Use HTTPS for all API calls
+
+Encrypt stored user tokens
+
+Never hardcode VPN credentials
+
+Validate subscription receipts server-side
+
+⚙️ Example Libraries
+Purpose	Library
+UI	react-native-paper / native-base
+State Mgmt	@reduxjs/toolkit
+VPN	Native OpenVPN bridge / WireGuard
+Ads	react-native-google-mobile-ads
+Subscriptions	react-native-iap
+Auth	@react-native-firebase/auth
+Backend	Express + Firebase Functions / AWS Lambda

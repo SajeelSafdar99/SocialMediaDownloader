@@ -1,0 +1,15 @@
+tunnel: 6f61e201-9b5c-4a88-bfa9-3bf953ac5506
+credentials-file: /Users/sajeelsafdar/.cloudflared/6f61e201-9b5c-4a88-bfa9-3bf953ac5506.json
+
+ingress:
+  # Admin subdomain
+  - hostname: admin.vidgrabber.online
+    service: http://localhost:5006
+  # Main domain
+  - hostname: vidgrabber.online
+    service: http://localhost:5006
+  # WWW subdomain
+  - hostname: www.vidgrabber.online
+    service: http://localhost:5006
+  # Catch-all rule (required)
+  - service: http_status:404

@@ -1,0 +1,29 @@
+# Robots.txt for SaveMedia
+# https://savemedia.app/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /subscribe
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+Allow: /dmca
+Allow: /instagram-downloader
+Allow: /tiktok-downloader
+Allow: /youtube-downloader
+
+# Sitemap
+Sitemap: https://savemedia.app/sitemap.xml
+
+# Crawl-delay (optional, adjust as needed)
+Crawl-delay: 1
