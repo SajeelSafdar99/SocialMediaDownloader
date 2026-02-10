@@ -290,4 +290,95 @@ export function setupAuth(app: Express) {
         }
         res.json(req.user);
     });
+
+    app.put("/api/user/profile", async (req: any, res) => {
+        if (!req.isAuthenticated()) {
+            return res.status(401).json({ ok: false, error: "Not logged in" });
+        }
+
+        try {
+            const userId = Number(req.user.id);
+            const user = await storage.getUser(userId);
+            if (!user) {
+                return res.status(404).json({ ok: false, error: "User not found" });
+            }
+
+            const { email, username, currentPassword, newPassword } = req.body;
+            const updates: any = {};
+
+            // Check if user is OAuth user
+            const isOAuthUser = !!(user.googleId || user.facebookId || user.githubId);
+
+            // Email update validation
+            if (email && email !== user.email) {
+                // Prevent OAuth users from changing email
+                if (isOAuthUser) {
+                    return res.status(403).json({
+                        ok: false,
+                        error: "Cannot change email for OAuth accounts. Email is managed by your OAuth provider."
+                    });
+                }
+
+                // Check if email is already in use
+                const existingUser = await storage.getUserByEmail(email);
+                if (existingUser && existingUser.id !== userId) {
+                    return res.status(400).json({ ok: false, error: "Email already in use" });
+                }
+
+                updates.email = email;
+            }
+
+            // Username update
+            if (username && username !== user.username) {
+                // Check if username is already in use
+                const existingUser = await storage.getUserByUsername(username);
+                if (existingUser && existingUser.id !== userId) {
+                    return res.status(400).json({ ok: false, error: "Username already in use" });
+                }
+
+                updates.username = username;
+            }
+
+            // Password update validation
+            if (newPassword) {
+                // Prevent OAuth users from changing password
+                if (isOAuthUser) {
+                    return res.status(403).json({
+                        ok: false,
+                        error: "Cannot change password for OAuth accounts. Password is managed by your OAuth provider."
+                    });
+                }
+
+                if (!currentPassword) {
+                    return res.status(400).json({ ok: false, error: "Current password is required to change password" });
+                }
+
+                // Verify current password
+                const isValidPassword = await comparePasswords(currentPassword, user.password);
+                if (!isValidPassword) {
+                    return res.status(400).json({ ok: false, error: "Current password is incorrect" });
+                }
+
+                if (newPassword.length < 8) {
+                    return res.status(400).json({ ok: false, error: "New password must be at least 8 characters" });
+                }
+
+                // Hash new password
+                updates.password = await hashPassword(newPassword);
+            }
+
+            // Update user if there are changes
+            if (Object.keys(updates).length > 0) {
+                updates.updatedAt = new Date();
+                await storage.updateUser(userId, updates);
+            }
+
+            // Fetch updated user
+            const updatedUser = await storage.getUser(userId);
+            res.json({ ok: true, user: updatedUser });
+        } catch (error: any) {
+            console.error("Profile update error:", error);
+            res.status(500).json({ ok: false, error: error.message || "Failed to update profile" });
+        }
+    });
 }

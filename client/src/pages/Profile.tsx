@@ -204,7 +204,11 @@ export default function Profile() {
     try {
       const updates: any = {};
 
-      if (formData.email !== user?.email) {
+      // Check if user is OAuth user
+      const isOAuthUser = !!(user?.googleId || user?.githubId || user?.facebookId);
+
+      // Only allow email update for non-OAuth users
+      if (formData.email !== user?.email && !isOAuthUser) {
         updates.email = formData.email;
       }
 
@@ -212,7 +216,8 @@ export default function Profile() {
         updates.username = formData.username;
       }
 
-      if (formData.newPassword) {
+      // Only allow password change for non-OAuth users
+      if (formData.newPassword && !isOAuthUser) {
         if (formData.newPassword !== formData.confirmPassword) {
           toast({
             title: 'Error',
@@ -344,14 +349,26 @@ export default function Profile() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email">
+                            Email
+                            {(user?.googleId || user?.githubId || user?.facebookId) && (
+                              <span className="text-xs text-muted-foreground ml-2">(Managed by OAuth provider)</span>
+                            )}
+                          </Label>
                           <Input
                             id="email"
                             type="email"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            disabled={!!(user?.googleId || user?.githubId || user?.facebookId)}
                             required
+                            className={!!(user?.googleId || user?.githubId || user?.facebookId) ? 'bg-muted cursor-not-allowed' : ''}
                           />
+                          {(user?.googleId || user?.githubId || user?.facebookId) && (
+                            <p className="text-xs text-muted-foreground">
+                              Email cannot be changed for OAuth accounts
+                            </p>
+                          )}
                         </div>
                       </div>
 
