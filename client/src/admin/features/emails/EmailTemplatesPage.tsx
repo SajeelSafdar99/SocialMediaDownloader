@@ -278,9 +278,9 @@ export default function EmailTemplatesPage() {
           {templates.map((template) => (
             <Card key={template.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {template.subject}
                       </h3>
@@ -303,25 +303,33 @@ export default function EmailTemplatesPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       leftIcon={<Eye className="h-4 w-4" />}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setSelectedTemplate(template);
                         setShowPreview(true);
                       }}
+                      className="cursor-pointer"
                     >
                       Preview
                     </Button>
                     <Button
+                      type="button"
                       size="sm"
                       leftIcon={<Edit className="h-4 w-4" />}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setSelectedTemplate(template);
                         setShowPreview(false);
                       }}
+                      className="cursor-pointer"
                     >
                       Edit
                     </Button>
@@ -341,8 +349,9 @@ export default function EmailTemplatesPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Edit Template: {selectedTemplate.name}</h2>
                 <button
+                  type="button"
                   onClick={() => setSelectedTemplate(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
@@ -412,11 +421,12 @@ export default function EmailTemplatesPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Preview: {selectedTemplate.name}</h2>
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedTemplate(null);
                     setShowPreview(false);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
@@ -448,8 +458,9 @@ export default function EmailTemplatesPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">SMTP Configuration</h2>
                 <button
+                  type="button"
                   onClick={() => setShowSmtpConfig(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   ✕
                 </button>
@@ -466,6 +477,7 @@ export default function EmailTemplatesPage() {
                     placeholder="smtp.gmail.com"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Gmail: smtp.gmail.com | SendGrid: smtp.sendgrid.net</p>
                 </div>
 
                 <div>
@@ -476,19 +488,21 @@ export default function EmailTemplatesPage() {
                     onChange={(e: any) => setSmtp({ ...smtp, port: parseInt(e.target.value) })}
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">587 (STARTTLS) or 465 (SSL)</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Secure (TLS)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Connection Type</label>
                   <div className="flex items-center h-10">
                     <input
                       type="checkbox"
                       checked={smtp.secure}
                       onChange={(e) => setSmtp({ ...smtp, secure: e.target.checked })}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
                     />
-                    <label className="ml-2 text-sm text-gray-700">Enable SSL/TLS</label>
+                    <label className="ml-2 text-sm text-gray-700">Use SSL (port 465)</label>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Uncheck for STARTTLS (port 587)</p>
                 </div>
 
                 <div className="col-span-2">
@@ -499,6 +513,7 @@ export default function EmailTemplatesPage() {
                     placeholder="your-email@gmail.com"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Your email address</p>
                 </div>
 
                 <div className="col-span-2">
@@ -507,9 +522,12 @@ export default function EmailTemplatesPage() {
                     type="password"
                     value={smtp.password}
                     onChange={(e: any) => setSmtp({ ...smtp, password: e.target.value })}
-                    placeholder="Your app password"
+                    placeholder="App password (not your email password)"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    For Gmail: Use App Password from <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Google Account Settings</a>
+                  </p>
                 </div>
 
                 <div>
@@ -562,13 +580,14 @@ export default function EmailTemplatesPage() {
 
       {/* Send Test Email Dialog */}
       {showTestEmailDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Send Test Email</h2>
               <button
+                type="button"
                 onClick={() => setShowTestEmailDialog(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
               >
                 ✕
               </button>

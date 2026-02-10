@@ -183,7 +183,7 @@ export default function DownloadForm({ onDownloadStart, defaultPlatform }: Downl
     { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: 'from-red-500 to-red-600' },
     { id: 'twitter', name: 'Twitter/X', icon: 'fab fa-x-twitter', color: 'from-gray-800 to-black' },
     { id: 'facebook', name: 'Facebook', icon: 'fab fa-facebook', color: 'from-blue-600 to-blue-700' },
-    { id: 'telegram', name: 'Telegram', icon: 'fab fa-telegram', color: 'from-sky-400 to-sky-500' },
+    { id: 'terabox', name: 'Terabox', icon: 'fas fa-cloud-download-alt', color: 'from-green-500 to-emerald-600' },
   ];
 
   useEffect(() => {
@@ -347,7 +347,7 @@ export default function DownloadForm({ onDownloadStart, defaultPlatform }: Downl
             {/* Probe hint */}
             <div className="text-xs text-muted-foreground">
               {url.trim() && detectedPlatform === 'unknown' && (
-                <span>Unsupported link. Try Instagram, TikTok, YouTube, Twitter/X, Facebook, or Telegram.</span>
+                <span>Unsupported link. Try Instagram, TikTok, YouTube, Twitter/X, Facebook, or Terabox.</span>
               )}
               {url.trim() && detectedPlatform !== 'unknown' && (
                 <span>
@@ -383,7 +383,7 @@ export default function DownloadForm({ onDownloadStart, defaultPlatform }: Downl
   );
 }
 
-type ProbePlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'telegram' | 'unknown';
+type ProbePlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'terabox' | 'unknown';
 type ProbeMediaType = 'video' | 'audio';
 interface ProbeOption {
   formatId: string;
@@ -412,7 +412,10 @@ function detectPlatformFromUrl(input: string): ProbePlatform {
     if (host === 'youtu.be' || host.endsWith('youtube.com')) return 'youtube';
     if (host.endsWith('twitter.com') || host.endsWith('x.com')) return 'twitter';
     if (host.endsWith('facebook.com') || host === 'fb.watch') return 'facebook';
-    if (host === 't.me' || host.endsWith('telegram.me') || host.endsWith('telegram.org') || host.endsWith('t.me')) return 'telegram';
+    // Terabox multiple domains
+    if (host.endsWith('terabox.com') || host.endsWith('1024tera.com') ||
+        host.endsWith('4funbox.com') || host.endsWith('mirrobox.com') ||
+        host.endsWith('nephobox.com') || host.endsWith('teraboxapp.com')) return 'terabox';
     return 'unknown';
   } catch {
     return 'unknown';

@@ -3,10 +3,10 @@
  * Handles sending emails with customizable templates
  */
 
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import { db } from '../db';
 import { emailTemplates, smtpConfig } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 interface EmailVariables {
   [key: string]: string | number;
@@ -35,15 +35,25 @@ async function getSmtpConfig() {
 async function createTransporter() {
   const config = await getSmtpConfig();
 
-  return nodemailer.createTransporter({
+  // Port 587 uses STARTTLS (secure: false), Port 465 uses SSL (secure: true)
+  const useSecure = config.port === 465;
+
+  const transportOptions: any = {
     host: config.host,
     port: config.port,
-    secure: config.secure,
+    secure: useSecure, // true for 465, false for other ports
     auth: {
       user: config.username,
       pass: config.password,
     },
-  });
+  };
+
+  // For port 587, explicitly require STARTTLS
+  if (config.port === 587) {
+    transportOptions.requireTLS = true;
+  }
+
+  return nodemailer.createTransport(transportOptions);
 }
 
 /**
@@ -67,8 +77,10 @@ export async function getEmailTemplate(templateName: string) {
   const [template] = await db
     .select()
     .from(emailTemplates)
-    .where(eq(emailTemplates.name, templateName))
-    .where(eq(emailTemplates.isActive, true))
+    .where(and(
+      eq(emailTemplates.name, templateName),
+      eq(emailTemplates.isActive, true)
+    ))
     .limit(1);
 
   if (!template) {

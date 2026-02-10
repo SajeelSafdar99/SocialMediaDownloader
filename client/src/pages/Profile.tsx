@@ -355,45 +355,50 @@ export default function Profile() {
                         </div>
                       </div>
 
-                      <Separator />
+                      {/* Only show change password for non-OAuth users */}
+                      {!user?.googleId && !user?.githubId && !user?.facebookId && (
+                        <>
+                          <Separator />
 
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Current Password</Label>
-                            <Input
-                              id="currentPassword"
-                              type="password"
-                              value={formData.currentPassword}
-                              onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                              placeholder="Enter current password"
-                            />
-                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <div className="space-y-2">
+                                <Label htmlFor="currentPassword">Current Password</Label>
+                                <Input
+                                  id="currentPassword"
+                                  type="password"
+                                  value={formData.currentPassword}
+                                  onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                                  placeholder="Enter current password"
+                                />
+                              </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="newPassword">New Password</Label>
-                            <Input
-                              id="newPassword"
-                              type="password"
-                              value={formData.newPassword}
-                              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                              placeholder="Enter new password"
-                            />
-                          </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="newPassword">New Password</Label>
+                                <Input
+                                  id="newPassword"
+                                  type="password"
+                                  value={formData.newPassword}
+                                  onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                                  placeholder="Enter new password"
+                                />
+                              </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <Input
-                              id="confirmPassword"
-                              type="password"
-                              value={formData.confirmPassword}
-                              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                              placeholder="Confirm new password"
-                            />
+                              <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                <Input
+                                  id="confirmPassword"
+                                  type="password"
+                                  value={formData.confirmPassword}
+                                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                  placeholder="Confirm new password"
+                                />
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
 
                       <div className="flex justify-end">
                         <Button type="submit" disabled={loading}>

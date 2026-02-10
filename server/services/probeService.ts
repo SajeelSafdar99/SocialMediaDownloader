@@ -10,7 +10,7 @@ export type ProbePlatform =
   | "youtube"
   | "twitter"
   | "facebook"
-  | "telegram"
+  | "terabox"
   | "unknown";
 
 export type ProbeMediaType = "video" | "audio";
@@ -60,7 +60,10 @@ export function detectPlatform(url: string): ProbePlatform {
   if (lower.includes("youtube.com") || lower.includes("youtu.be")) return "youtube";
   if (lower.includes("twitter.com") || lower.includes("x.com")) return "twitter";
   if (lower.includes("facebook.com") || lower.includes("fb.watch")) return "facebook";
-  if (lower.includes("t.me") || lower.includes("telegram.me") || lower.includes("telegram.org")) return "telegram";
+  // Terabox has multiple domains
+  if (lower.includes("terabox.com") || lower.includes("1024tera.com") ||
+      lower.includes("4funbox.com") || lower.includes("mirrobox.com") ||
+      lower.includes("nephobox.com") || lower.includes("teraboxapp.com")) return "terabox";
 
   return "unknown";
 }

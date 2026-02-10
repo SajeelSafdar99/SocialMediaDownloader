@@ -22,7 +22,7 @@
     "admin:delete": "tsx scripts/delete-admin.ts",
     "admin:disable-2fa": "tsx scripts/disable-admin-2fa.ts",
     "admin:setup": "bash scripts/setup-admin.sh",
-    "email:migrate": "tsx scripts/run-email-migration.ts",
+    "email:init": "tsx scripts/init-email-templates.ts",
     "email:check": "tsx scripts/check-email-templates.ts",
     "users:check-roles": "tsx scripts/check-user-roles.ts",
     "users:fix-roles": "tsx scripts/fix-user-roles.ts",

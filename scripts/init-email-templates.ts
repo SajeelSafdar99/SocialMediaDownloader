@@ -1,12 +1,13 @@
 /**
  * Initialize Email Templates
- * Re-creates email templates if they're missing
+ * Creates email_templates and smtp_config tables and inserts default templates
+ * This script combines migration and template initialization
  */
 
 import { db } from "../server/db";
-import { emailTemplates } from "../shared/schema";
+import { emailTemplates, smtpConfig } from "../shared/schema";
 import { loadEnv } from "../server/env";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 loadEnv();
 
@@ -150,16 +151,153 @@ const templates = [
     textContent: 'Hi {{username}}! Your Premium subscription is now active. Plan: {{planName}}, Expires: {{expiryDate}}. Start using at {{appUrl}}',
     variables: { username: "User's name", planName: "Subscription plan name", expiryDate: "Subscription expiry date", appUrl: "Application URL" },
     isActive: true
+  },
+  {
+    name: 'test_email',
+    subject: 'Test Email from VidGrabber',
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+    .info-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ SMTP Configuration Test</h1>
+    </div>
+    <div class="content">
+      <h2>Hi {{recipientName}}!</h2>
+      <p>This is a test email to verify your SMTP configuration is working correctly.</p>
+      <div class="info-box">
+        <p><strong>Test Details:</strong></p>
+        <ul>
+          <li>Recipient: {{recipientEmail}}</li>
+          <li>Sent at: {{sentAt}}</li>
+          <li>Server: VidGrabber Email System</li>
+        </ul>
+      </div>
+      <p>✅ If you received this email, your SMTP configuration is working perfectly!</p>
+      <p>You can now send emails to your users for welcome messages, password resets, and subscription notifications.</p>
+      <p>Best regards,<br>The VidGrabber Team</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 VidGrabber. All rights reserved.</p>
+      <p><a href="{{adminUrl}}">Admin Dashboard</a></p>
+    </div>
+  </div>
+</body>
+</html>`,
+    textContent: 'Test email from VidGrabber. Sent to {{recipientEmail}} at {{sentAt}}. SMTP configuration is working!',
+    variables: { recipientName: "Recipient name", recipientEmail: "Recipient email", sentAt: "Timestamp", adminUrl: "Admin URL" },
+    isActive: true
+  },
+  {
+    name: 'refund_request',
+    subject: 'Refund Request Received',
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+    .info-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Refund Request Received</h1>
+    </div>
+    <div class="content">
+      <h2>Hi {{username}}!</h2>
+      <p>We have received your refund request. Our team will review it and get back to you within 3-5 business days.</p>
+      <div class="info-box">
+        <p><strong>Request Details:</strong></p>
+        <ul>
+          <li>Request ID: #{{requestId}}</li>
+          <li>Payment ID: {{paymentId}}</li>
+          <li>Amount: {{amount}}</li>
+          <li>Reason: {{reason}}</li>
+          <li>Submitted: {{submittedAt}}</li>
+        </ul>
+      </div>
+      <p>According to our refund policy, refunds are processed based on:</p>
+      <ul>
+        <li>Service issues or technical problems</li>
+        <li>Duplicate charges</li>
+        <li>Subscription cancellation within the eligible period</li>
+      </ul>
+      <p>If you have any questions, please contact our support team at <a href="mailto:support@vidgrabber.online">support@vidgrabber.online</a></p>
+      <p>Best regards,<br>The VidGrabber Team</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 VidGrabber. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+    textContent: 'Hi {{username}}! Your refund request #{{requestId}} has been received. Amount: {{amount}}. We will review it within 3-5 business days.',
+    variables: { username: "User's name", requestId: "Request ID", paymentId: "Payment ID", amount: "Refund amount", reason: "Refund reason", submittedAt: "Submission date" },
+    isActive: true
   }
 ];
 
 async function initTemplates() {
-  console.log('📧 Initializing Email Templates\n');
+  console.log('📧 Initializing Email System\n');
 
   try {
-    // Check existing templates
+    // Step 1: Create tables if they don't exist
+    console.log('🔧 Creating database tables...\n');
+
+    // Create email_templates table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS email_templates (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        subject VARCHAR(255) NOT NULL,
+        html_content TEXT NOT NULL,
+        text_content TEXT,
+        variables JSON,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ email_templates table ready');
+
+    // Create smtp_config table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS smtp_config (
+        id SERIAL PRIMARY KEY,
+        host VARCHAR(255) NOT NULL,
+        port INTEGER NOT NULL,
+        secure BOOLEAN DEFAULT true,
+        username VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        from_email VARCHAR(255) NOT NULL,
+        from_name VARCHAR(255) NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ smtp_config table ready\n');
+
+    // Step 2: Check existing templates
     const existing = await db.select().from(emailTemplates);
-    console.log(`Found ${existing.length} existing templates\n`);
+    console.log(`📋 Found ${existing.length} existing templates\n`);
 
     for (const template of templates) {
       const exists = existing.find(t => t.name === template.name);
@@ -200,11 +338,25 @@ async function initTemplates() {
 
     // Show final count
     const final = await db.select().from(emailTemplates);
-    console.log(`\n✅ Total templates: ${final.length}`);
-    console.log('\n📋 Templates:');
+    console.log(`\n✅ Email system initialized successfully!`);
+    console.log(`📊 Total templates: ${final.length}`);
+    console.log('\n📋 Available Templates:');
     for (const t of final) {
       console.log(`   ${t.isActive ? '✅' : '❌'} ${t.name}: "${t.subject}"`);
     }
+
+    // Check SMTP config
+    const [smtp] = await db.select().from(smtpConfig).limit(1);
+    if (smtp) {
+      console.log(`\n📧 SMTP Config: ${smtp.fromName} <${smtp.fromEmail}>`);
+    } else {
+      console.log(`\n⚠️  No SMTP configuration found. Configure it in Admin Dashboard.`);
+    }
+
+    console.log('\n💡 Next steps:');
+    console.log('   1. Configure SMTP settings in Admin Dashboard > Email Templates');
+    console.log('   2. Test your configuration using the "Send Test Email" button');
+    console.log('   3. Customize templates as needed\n');
 
     process.exit(0);
   } catch (error) {

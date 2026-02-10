@@ -5,22 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e6a3add-36c7-4214-939e-115014a29588" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/BINANCE_PAY_TESTING_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BINANCE_QUICK_TEST.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BINANCE_TESTING_CHECKLIST.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_ARCHITECTURE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_COMPARISON_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_DOCS_INDEX.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_IMPLEMENTATION_COMPLETE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_METHODS_QUICK_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PAYMENT_METHODS_SUMMARY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PROXY_FIX_SUMMARY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PROXY_SETUP_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test-proxy-quick.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-proxy.js" beforeDir="false" afterPath="$PROJECT_DIR$/test-proxy.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GIT_HISTORY_RESET.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,33 +54,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/server&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.admin:create.executor&quot;: &quot;Run&quot;,
-    &quot;npm.admin:delete.executor&quot;: &quot;Run&quot;,
-    &quot;npm.admin:list.executor&quot;: &quot;Run&quot;,
-    &quot;npm.build.executor&quot;: &quot;Run&quot;,
-    &quot;npm.build:ssr.executor&quot;: &quot;Run&quot;,
-    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
-    &quot;npm.prerender:blog.executor&quot;: &quot;Run&quot;,
-    &quot;npm.server.executor&quot;: &quot;Run&quot;,
-    &quot;npm.start.executor&quot;: &quot;Run&quot;,
-    &quot;npm.test:proxy.executor&quot;: &quot;Run&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/node_modules/typescript/lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHELLCHECK.PATH": "/Users/sajeelsafdar/Library/Application Support/JetBrains/PhpStorm2025.1/plugins/Shell Script/shellcheck",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/server",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.admin:create.executor": "Run",
+    "npm.admin:delete.executor": "Run",
+    "npm.admin:list.executor": "Run",
+    "npm.build.executor": "Run",
+    "npm.build:ssr.executor": "Run",
+    "npm.dev.executor": "Run",
+    "npm.prerender:blog.executor": "Run",
+    "npm.server.executor": "Run",
+    "npm.start.executor": "Run",
+    "npm.test:proxy.executor": "Run",
+    "npm.test:telegram.executor": "Run",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "ts.external.directory.path": "/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/server" />
@@ -108,17 +95,7 @@
       <recent name="$PROJECT_DIR$/server" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.test:proxy">
-    <configuration name="admin:create" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="admin:create" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="npm.admin:list">
     <configuration name="admin:list" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
@@ -159,13 +136,23 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="test:telegram" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="test:telegram" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.admin:list" />
+        <item itemvalue="npm.test:telegram" />
         <item itemvalue="npm.test:proxy" />
         <item itemvalue="npm.prerender:blog" />
         <item itemvalue="npm.build:ssr" />
-        <item itemvalue="npm.admin:list" />
-        <item itemvalue="npm.admin:create" />
       </list>
     </recent_temporary>
   </component>
@@ -192,6 +179,7 @@
       <workItem from="1768103233836" duration="5980000" />
       <workItem from="1770173171456" duration="1867000" />
       <workItem from="1770256170106" duration="229000" />
+      <workItem from="1770555814558" duration="40190000" />
     </task>
     <servers />
   </component>

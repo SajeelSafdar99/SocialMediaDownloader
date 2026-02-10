@@ -149,12 +149,15 @@ export class DownloadService {
       const platform = detectPlatform(url);
       const args = ['--dump-json', '--no-download'];
 
-      // Add headers for TikTok and Instagram (impersonation disabled - requires curl-cffi)
-      if (platform === 'tiktok' || platform === 'instagram') {
-        // args.push('--impersonate', 'chrome');  // Disabled: requires curl-cffi
+      // Add headers for TikTok, Instagram, and Terabox
+      if (platform === 'tiktok' || platform === 'instagram' || platform === 'terabox') {
         args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         if (platform === 'tiktok') {
           args.push('--referer', 'https://www.tiktok.com/');
+        }
+        if (platform === 'terabox') {
+          // Terabox might need cookies for some videos
+          args.push('--no-check-certificate');
         }
       }
 
@@ -190,12 +193,19 @@ export class DownloadService {
 
     const args: string[] = [];
 
-    // Detect platform and add headers if needed (without impersonation)
+    // Detect platform and add headers if needed
     const platform = detectPlatform(url);
-    if (platform === 'tiktok' || platform === 'instagram') {
+    if (platform === 'tiktok' || platform === 'instagram' || platform === 'terabox') {
       args.push('--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
       if (platform === 'tiktok') {
         args.push('--referer', 'https://www.tiktok.com/');
+      }
+      if (platform === 'terabox') {
+        // Terabox specific options
+        args.push('--no-check-certificate');
+        // Add retries for Terabox as it can be flaky
+        args.push('--retries', '10');
+        args.push('--fragment-retries', '10');
       }
     }
 

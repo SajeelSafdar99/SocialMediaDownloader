@@ -97,6 +97,22 @@ function buildOptionsForWhatsApp(result: Awaited<ReturnType<typeof probeUrl>>): 
   }).slice(0, 8);
 }
 
+function getMenuMessage(): string {
+  return [
+    "📋 *Quick Menu*",
+    "",
+    "Send any command below:",
+    "",
+    "📊 /downloads - Check downloads left",
+    "❓ /help - How to use the bot",
+    "⭐ /premium - Premium plans",
+    "🔗 /pair - Link web account",
+    "🏠 /start - Start the bot",
+    "",
+    "Or simply send me a video link to download!",
+  ].join("\n");
+}
+
 async function sendSubscribePrompt(chatId: string, resetAtIso?: string) {
   const limit = getWhatsAppFreeLimit();
   const web = getBaseUrl();
@@ -583,48 +599,35 @@ async function handleWhatsAppMessage(message: any) {
         
         // Get user's current usage
         const userUsage = await storage.getWhatsAppUserUsage(normalizedWhatsappId);
-        const remaining = Math.max(0, limit - (userUsage?.count || 0));
-        const windowDays = Number(process.env.WHATSAPP_FREE_WINDOW_DAYS || 1);
-        
+        const used = user.freeUsedCount ?? 0;
+        const remaining = Math.max(0, limit - used);
+
+        const statusEmoji = user.isPremium ? "⭐" : "🆓";
+        const statusText = user.isPremium ? "Premium User" : "Free User";
+        const limitText = user.isPremium ? "Unlimited downloads" : `${remaining}/${limit} downloads left`;
+
         const welcomeMessage = [
-          "👋 *Welcome to SaveMedia Bot!*",
+          `${statusEmoji} *Welcome to VidGrabber Bot!*`,
           "",
-          "📥 *What I Can Do:*",
-          "• Download videos from TikTok, Instagram, YouTube, Facebook, Twitter/X",
-          "• Extract audio (MP3) from videos",
-          "• Support multiple quality options (SD, HD, Full HD, 4K)",
-          "• No watermarks on downloaded videos",
+          `Status: ${statusText}`,
+          `Downloads: ${limitText}`,
           "",
-          "📊 *Your Usage:*",
-          `• Remaining downloads: *${remaining}* out of *${limit}*`,
-          `• Resets every *${windowDays} days*`,
-          user?.isPremium ? "• ⭐ *Premium Active* - Unlimited downloads!" : "",
+          "Send me a video link from:",
+          "• TikTok",
+          "• Instagram",
+          "• YouTube",
+          "• Facebook",
+          "• Twitter",
+          "• Terabox",
           "",
-          "🆓 *Free Plan Limits:*",
-          `• *${limit} downloads* per ${windowDays} days`,
-          "• Standard quality (up to 1080p)",
-          "• Basic download speed",
-          "• Ad messages between downloads",
+          "I'll fetch download options for you!",
           "",
-          "⭐ *Premium Plan - $9.99/month:*",
-          "• ✨ *Unlimited downloads*",
-          "• 🎬 4K quality available",
-          "• ⚡ Faster download speed",
-          "• 🚫 No ads",
-          "• 📦 Batch downloads",
-          "",
-          "💳 *Subscribe to Premium:*",
-          subscribeUrl ? `👉 ${subscribeUrl}` : "Contact support for premium access",
-          "",
-          "📋 *Commands:*",
-          "• /start - Show this message",
-          "• /premium - Premium details",
-          "• /redeem <code> - Redeem premium code",
-          "",
-          "🚀 *How to Use:*",
-          "Just send me any video link and I'll download it for you!",
-          "",
-          "Example: Send a TikTok, Instagram, or YouTube link.",
+          "📋 *Quick Commands:*",
+          "/downloads - Check downloads left",
+          "/help - Help & guide",
+          "/premium - Premium plans",
+          "/pair - Link web account",
+          "/menu - Show this menu",
         ].filter(Boolean).join("\n");
         
         console.log(`📤 Sending welcome message to ${chatId}...`);
@@ -643,6 +646,74 @@ async function handleWhatsAppMessage(message: any) {
         }
         return;
       }
+    }
+
+    if (body.startsWith("/downloads")) {
+      const normalizedWhatsappId = normalizeWhatsAppId(whatsappId);
+      const user = await storage.getOrCreateWhatsAppUser({ whatsappId: normalizedWhatsappId, username });
+
+      if (user.isPremium) {
+        if (!whatsappClient) return;
+        await whatsappClient.sendMessage(
+          chatId,
+          "⭐ *Premium Status*\n\n" +
+          "✅ Unlimited downloads\n" +
+          "✅ All quality options (up to 4K)\n" +
+          "✅ Priority processing\n" +
+          "✅ No ads"
+        );
+      } else {
+        const limit = getWhatsAppFreeLimit();
+        const used = user.freeUsedCount ?? 0;
+        const remaining = Math.max(0, limit - used);
+        const resetDate = user.freeResetAt?.toLocaleDateString() || "N/A";
+
+        if (!whatsappClient) return;
+        await whatsappClient.sendMessage(
+          chatId,
+          "🆓 *Free User Status*\n\n" +
+          `📥 Downloads remaining: *${remaining}/${limit}*\n` +
+          `📅 Resets on: ${resetDate}\n\n` +
+          `⚠️ Quality limited to:\n` +
+          `• Landscape: max 1080p\n` +
+          `• Portrait: max 1280p\n\n` +
+          `Want unlimited downloads and 4K quality?\n` +
+          `Upgrade to Premium! Use /premium`
+        );
+      }
+      return;
+    }
+
+    if (body.startsWith("/help") || body.startsWith("/menu")) {
+      const web = getBaseUrl();
+      if (!whatsappClient) return;
+      await whatsappClient.sendMessage(
+        chatId,
+        "❓ *VidGrabber Bot Help*\n\n" +
+        "*How to use:*\n" +
+        "1️⃣ Send a video link\n" +
+        "2️⃣ Choose quality/format\n" +
+        "3️⃣ Get your download!\n\n" +
+        "*Supported platforms:*\n" +
+        "✅ TikTok\n" +
+        "✅ Instagram (posts, reels, stories)\n" +
+        "✅ YouTube\n" +
+        "✅ Facebook\n" +
+        "✅ Twitter\n" +
+        "✅ Terabox\n\n" +
+        "*Commands:*\n" +
+        "`/start` - Start the bot\n" +
+        "`/help` - Show this help\n" +
+        "`/premium` - View premium plans\n" +
+        "`/pair` - Link web account\n" +
+        "`/downloads` - Check remaining downloads\n\n" +
+        "*Free vs Premium:*\n" +
+        "🆓 Free: 7 downloads/30 days, max 1080p\n" +
+        "⭐ Premium: Unlimited, up to 4K quality\n\n" +
+        `*Website:* ${web || 'N/A'}\n` +
+        `*Support:* ${process.env.SUPPORT_EMAIL || 'N/A'}`
+      );
+      return;
     }
 
     if (body.startsWith("/redeem")) {
@@ -665,44 +736,78 @@ async function handleWhatsAppMessage(message: any) {
     }
 
     if (body.startsWith("/premium")) {
-      const web = getBaseUrl();
-      const subscribeUrl = process.env.WHATSAPP_SUBSCRIBE_URL || (web ? `${web}/subscribe` : undefined);
       if (!whatsappClient) return;
-      
-      const premiumMessage = [
-        "⭐ *Premium Plan Features:*",
-        "",
-        "✨ *Unlimited Downloads*",
-        "Download as many videos as you want, no limits!",
-        "",
-        "🎬 *4K Quality*",
-        "Get the highest quality videos available (up to 2160p)",
-        "",
-        "⚡ *Faster Downloads*",
-        "Priority processing for faster download speeds",
-        "",
-        "🚫 *Ad-Free Experience*",
-        "No promotional messages between downloads",
-        "",
-        "📦 *Batch Downloads*",
-        "Download multiple videos at once",
-        "",
-        "💳 *Pricing:*",
-        "• Monthly: $9.99/month",
-        "• Cancel anytime",
-        "",
-        "🔗 *Upgrade Now:*",
-        subscribeUrl ? subscribeUrl : "Contact support for premium access",
-        "",
-        "💡 *Premium codes available from admin*",
-        "Use /redeem <code> to activate premium with a code",
-      ].join("\n");
-      
-      await whatsappClient.sendMessage(chatId, premiumMessage);
+
+      try {
+        const web = getBaseUrl();
+        const subscribeUrl = process.env.WHATSAPP_SUBSCRIBE_URL || (web ? `${web}/subscribe` : undefined);
+
+        // Fetch available plans from the API
+        const response = await fetch(`${web}/api/payment/safepay/available-plans`);
+        const data = await response.json();
+
+        let plansText = "⭐ *Premium Plans*\n\n";
+
+        if (data.ok && data.plans && data.plans.length > 0) {
+          console.log(`✅ Found ${data.plans.length} plans:`, data.plans.length);
+
+          plansText += "*Available Plans:*\n\n";
+
+          data.plans.forEach((plan: any, index: number) => {
+            const price = plan.amount ? (parseInt(plan.amount) / 100).toFixed(2) : "N/A";
+            const currency = plan.currency || "PKR";
+            const interval = plan.interval || "month";
+
+            plansText += `${index + 1}. *${plan.name || 'Premium Plan'}*\n`;
+            plansText += `   💰 ${currency} ${price}/${interval}\n`;
+            if (plan.description) {
+              plansText += `   📝 ${plan.description}\n`;
+            }
+            plansText += `\n`;
+          });
+
+          plansText += "\n*Premium Features:*\n";
+          plansText += "✨ Unlimited downloads\n";
+          plansText += "🎬 Up to 4K quality\n";
+          plansText += "⚡ Priority processing\n";
+          plansText += "🚫 No ads\n\n";
+
+          if (subscribeUrl) {
+            plansText += "*How to Subscribe:*\n";
+            plansText += "1. Visit our website\n";
+            plansText += "2. Create an account or sign in\n";
+            plansText += "3. Choose a plan and subscribe\n";
+            plansText += "4. Use /pair to link your accounts\n\n";
+            plansText += `*Subscribe:* ${subscribeUrl}\n`;
+          }
+        } else {
+          plansText += "*Premium Features:*\n\n";
+          plansText += "✨ *Unlimited Downloads*\n";
+          plansText += "Download as many videos as you want!\n\n";
+          plansText += "🎬 *4K Quality*\n";
+          plansText += "Get the highest quality videos (up to 2160p)\n\n";
+          plansText += "⚡ *Faster Downloads*\n";
+          plansText += "Priority processing for faster speeds\n\n";
+          plansText += "🚫 *No Ads*\n";
+          plansText += "Enjoy ad-free downloads\n\n";
+
+          if (subscribeUrl) {
+            plansText += `*Subscribe:* ${subscribeUrl}\n\n`;
+          }
+
+          plansText += "💡 *Have a premium code?*\n";
+          plansText += "Use `/redeem <code>` to activate\n";
+        }
+
+        await whatsappClient.sendMessage(chatId, plansText);
+      } catch (error: any) {
+        console.error("Error fetching plans:", error);
+        await whatsappClient.sendMessage(chatId, "❌ Failed to fetch premium plans. Please try again later.");
+      }
       return;
     }
 
-    if (body.startsWith("/link")) {
+    if (body.startsWith("/link") || body.startsWith("/pair")) {
       const base = getBaseUrl();
       if (!base) {
         if (!whatsappClient) return;
@@ -715,10 +820,25 @@ async function handleWhatsAppMessage(message: any) {
 
       const { url, expiresAt } = await createWhatsAppPairLink({ whatsappId: normalizedWhatsappId, baseUrl: base });
       if (!whatsappClient) return;
-      await whatsappClient.sendMessage(
-        chatId,
-        `To link your WhatsApp to your SaveMedia account, open this link and sign in.\n\n${url}\n\nLink expires at: ${expiresAt.toISOString()}`
-      );
+
+      const pairMessage = [
+        "🔗 *Link Your Account*",
+        "",
+        "To sync your premium status:",
+        "",
+        "1. Copy the link below",
+        "2. Open it in your browser",
+        "3. Sign in to your account",
+        "4. Your accounts will be linked!",
+        "",
+        `⏰ Link expires: ${expiresAt.toLocaleString()}`,
+        "",
+        "After linking, your premium subscription will work on both web and WhatsApp!",
+        "",
+        `*Link:* ${url}`,
+      ].join("\n");
+
+      await whatsappClient.sendMessage(chatId, pairMessage);
       return;
     }
 

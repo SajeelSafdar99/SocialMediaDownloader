@@ -10,7 +10,7 @@ export default function About() {
   const stats = [
     { label: "Downloads Served", value: "10M+", icon: "fas fa-download" },
     { label: "Active Users", value: "500K+", icon: "fas fa-users" },
-    { label: "Supported Platforms", value: "10+", icon: "fas fa-globe" },
+    { label: "Supported Platforms", value: "6+", icon: "fas fa-globe" },
     { label: "Countries", value: "150+", icon: "fas fa-map-marker-alt" },
   ];
 
@@ -43,6 +43,7 @@ export default function About() {
     { name: "YouTube", icon: "fab fa-youtube", color: "from-red-500 to-red-600" },
     { name: "Facebook", icon: "fab fa-facebook", color: "from-blue-500 to-blue-700" },
     { name: "Twitter/X", icon: "fab fa-twitter", color: "from-blue-400 to-blue-500" },
+    { name: "Terabox", icon: "fas fa-cloud-download-alt", color: "from-green-500 to-emerald-600" },
   ];
 
   return (
