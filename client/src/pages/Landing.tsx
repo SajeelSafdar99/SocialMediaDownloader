@@ -118,6 +118,8 @@ export default function Landing() {
   ];
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handler = (e: any) => {
       const id = e?.detail?.downloadId;
       if (id) setCurrentDownloadId(String(id));
@@ -127,6 +129,8 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get('telegramLinked') === '1') {
@@ -164,6 +168,8 @@ export default function Landing() {
   const shareText = encodeURIComponent('VidGrabber — fast, free video downloads from Instagram, TikTok, YouTube, X, Facebook and more.');
 
   const openShare = (url: string) => {
+    if (typeof window === 'undefined') return;
+
     try {
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
@@ -492,7 +498,11 @@ export default function Landing() {
                             </li>
                           </ul>
                           <Button
-                            onClick={() => window.location.href = '/subscribe'}
+                            onClick={() => {
+                              if (typeof window !== 'undefined') {
+                                window.location.href = '/subscribe';
+                              }
+                            }}
                             className={`w-full px-6 py-3 rounded-xl font-semibold transition-all pulse-animation touch-manipulation active:scale-95 ${
                               isPopular 
                                 ? 'bg-white text-primary hover:bg-opacity-90' 

@@ -198,6 +198,113 @@ export async function updateSubscription(
 }
 
 /**
+ * Create a new subscription using SafePay Tracker API with mode="subscription"
+ * Ref: SafePay API Documentation - Subscription Tracker
+ *
+ * IMPORTANT: SafePay uses tracker-based subscriptions, NOT a separate subscriptions API!
+ * - Create tracker with mode="subscription" and entry_mode="mit" (Merchant-Initiated Transaction)
+ * - The saved payment method token will be used for recurring charges
+ */
+export async function createSubscription(params: {
+  userId: string;
+  planId: string;
+  instrumentId: string;
+  merchantApiKey: string;
+}): Promise<{ ok: boolean; subscription?: SafePaySubscription; error?: string }> {
+  try {
+    if (!SAFEPAY_MERCHANT_SECRET) {
+      throw new Error("SAFEPAY_SECRET is not configured");
+    }
+
+    console.log("🆕 Creating SafePay Subscription via Tracker (MIT mode):", {
+      userId: params.userId,
+      planId: params.planId,
+      instrumentId: params.instrumentId
+    });
+
+    // Per SafePay docs: Subscriptions use tracker with mode="subscription" and entry_mode="mit"
+    // The payment_method token will be used for recurring charges
+    const requestBody = {
+      merchant_api_key: params.merchantApiKey,
+      user: params.userId, // Customer ID (cus_ format)
+      intent: "CYBERSOURCE",
+      mode: "subscription", // Important: This is a subscription tracker
+      entry_mode: "mit", // Merchant-Initiated Transaction for recurring billing
+      currency: "PKR", // Required field
+      amount: 1, // Nominal amount - actual charges will be per plan schedule
+    };
+
+    console.log("📤 Subscription tracker request:", JSON.stringify(requestBody, null, 2));
+
+    // Use the Tracker API endpoint with mode="subscription"
+    const response = await fetch(`${SAFEPAY_API_URL}/order/payments/v3/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-SFPY-MERCHANT-SECRET": SAFEPAY_MERCHANT_SECRET,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const responseText = await response.text();
+    console.log("📥 Create Subscription Tracker Response Status:", response.status);
+    console.log("📥 Response:", responseText);
+
+    if (!response.ok) {
+      console.error("❌ Failed to create subscription tracker, Status:", response.status);
+      try {
+        const errorData = JSON.parse(responseText);
+        const errorMessage = errorData.status?.message || errorData.message || errorData.status?.errors?.join(", ");
+        return { ok: false, error: errorMessage || `Failed to create subscription (${response.status})` };
+      } catch {
+        return { ok: false, error: `Failed to create subscription (${response.status}): ${responseText}` };
+      }
+    }
+
+    try {
+      const result = JSON.parse(responseText);
+      const tracker = result.data?.tracker;
+
+      if (!tracker || !tracker.token) {
+        console.error("❌ No tracker token in response");
+        console.error("   Response data:", result);
+        return { ok: false, error: "No tracker token in response" };
+      }
+
+      // Verify this is a subscription tracker
+      if (tracker.mode !== 'subscription') {
+        console.warn("⚠️  Warning: Tracker mode is not 'subscription'");
+        console.warn("   Mode:", tracker.mode);
+      }
+
+      console.log("✅ Subscription tracker created successfully");
+      console.log("   Tracker Token:", tracker.token);
+      console.log("   Mode:", tracker.mode);
+      console.log("   Entry Mode:", tracker.entry_mode);
+      console.log("   State:", tracker.state);
+      console.log("   Customer:", tracker.customer);
+
+      // Return subscription in the format our system expects
+      return {
+        ok: true,
+        subscription: {
+          token: tracker.token,
+          status: tracker.state === 'TRACKER_STARTED' ? 'ACTIVE' : tracker.state,
+          user: tracker.customer,
+          plan: { id: params.planId, name: 'Subscription Plan' }
+        } as SafePaySubscription
+      };
+    } catch (parseError) {
+      console.error("❌ Failed to parse subscription response:", parseError);
+      return { ok: false, error: "API returned invalid JSON response" };
+    }
+  } catch (error: any) {
+    console.error("❌ Error creating subscription:", error);
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
  * Cancel a subscription (Admin or User)
  */
 export async function cancelSubscription(subscriptionId: string): Promise<{ ok: boolean; subscription?: SafePaySubscription; error?: string }> {

@@ -18,12 +18,12 @@ export function registerRefundRequestRoutes(app: Express) {
    */
   app.post("/api/refund-request", async (req: any, res) => {
     try {
-      const { userId, paymentId, transactionId, amount, reason, additionalDetails } = req.body;
+      const { userId, transactionId, amount, reason, additionalDetails } = req.body;
 
-      if (!userId || !paymentId || !amount || !reason) {
+      if (!userId || !transactionId || !amount || !reason) {
         return res.status(400).json({
           ok: false,
-          error: "Missing required fields: userId, paymentId, amount, reason"
+          error: "Missing required fields: userId, transactionId, amount, reason"
         });
       }
 
@@ -38,11 +38,11 @@ export function registerRefundRequestRoutes(app: Express) {
         return res.status(404).json({ ok: false, error: "User not found" });
       }
 
-      // Get payment details
+      // Get payment details by transaction ID
       const [payment] = await db
         .select()
         .from(payments)
-        .where(eq(payments.id, parseInt(paymentId)))
+        .where(eq(payments.transactionId, transactionId))
         .limit(1);
 
       if (!payment) {
@@ -84,7 +84,8 @@ export function registerRefundRequestRoutes(app: Express) {
           payment.amount,
           payment.currency,
           reason,
-          additionalDetails || ''
+          additionalDetails || '',
+          refund.id // Pass the refund request ID
         );
         console.log('📧 Refund request email sent to admin');
       } catch (emailError) {
@@ -101,7 +102,8 @@ export function registerRefundRequestRoutes(app: Express) {
             payment.id,
             payment.amount,
             payment.currency,
-            reason
+            reason,
+            refund.id // Pass the refund request ID
           );
           console.log('📧 Refund confirmation email sent to user');
         }

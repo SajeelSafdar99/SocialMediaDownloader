@@ -17,6 +17,11 @@ export const config = {
   apiBaseUrl: (() => {
     const envApiUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) || "";
 
+    // Only check window in browser environment
+    if (typeof window === 'undefined') {
+      return envApiUrl;
+    }
+
     // If we're accessing from a production domain (not localhost)
     // and the API URL is set to localhost, use empty string (same origin)
     const currentHost = window.location.host;

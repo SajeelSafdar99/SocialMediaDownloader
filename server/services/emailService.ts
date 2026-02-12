@@ -189,20 +189,21 @@ export async function sendRefundRequestEmail(
   amount: number,
   currency: string,
   reason: string,
-  additionalDetails: string
+  additionalDetails: string,
+  requestId?: number
 ) {
-  const appUrl = process.env.APP_URL || 'http://localhost:5173';
+  const appUrl = process.env.PUBLIC_BASE_URL || process.env.APP_URL || 'https://vidgrabber.online';
   const adminUrl = appUrl.includes('localhost') ? 'http://localhost:5173' : 'https://admin.vidgrabber.online';
 
   return sendTemplateEmail('refund_request', to, {
     username,
     userEmail,
+    requestId: requestId ? requestId.toString() : 'Pending',
     paymentId: paymentId.toString(),
-    amount: (amount / 100).toFixed(2),
-    currency,
+    amount: `${currency} ${(amount / 100).toFixed(2)}`,
     reason,
     additionalDetails: additionalDetails || 'None provided',
-    requestedAt: new Date().toLocaleString('en-US', {
+    submittedAt: new Date().toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -222,14 +223,22 @@ export async function sendRefundConfirmationEmail(
   paymentId: number,
   amount: number,
   currency: string,
-  reason: string
+  reason: string,
+  requestId?: number
 ) {
-  return sendTemplateEmail('refund_confirmation', to, {
+  return sendTemplateEmail('refund_request', to, { // Use refund_request template (same as admin notification)
     username,
+    requestId: requestId ? requestId.toString() : 'Pending',
     paymentId: paymentId.toString(),
-    amount: (amount / 100).toFixed(2),
-    currency,
+    amount: `${currency} ${(amount / 100).toFixed(2)}`,
     reason,
+    submittedAt: new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
   });
 }
 

@@ -8,7 +8,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 export default function ThreeDSChallenge() {
   const [, setLocation] = useLocation();
   const navigate = (path: string) => setLocation(path);
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search)
+    : new URLSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,7 +171,9 @@ export default function ThreeDSChallenge() {
       }, 500);
 
       // Listen for messages from the iframe
-      window.addEventListener('message', handleIframeMessage);
+      if (typeof window !== 'undefined') {
+        window.addEventListener('message', handleIframeMessage);
+      }
     } catch (err: any) {
       console.error('❌ Failed to start 3DS challenge:', err);
       setError(err.message);
@@ -230,7 +234,9 @@ export default function ThreeDSChallenge() {
   useEffect(() => {
     return () => {
       // Clean up event listener
-      window.removeEventListener('message', handleIframeMessage);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('message', handleIframeMessage);
+      }
     };
   }, []);
 

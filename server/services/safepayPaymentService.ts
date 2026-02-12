@@ -2,80 +2,63 @@ import crypto from "crypto";
 import { storage } from "../storage";
 
 /**
- * SafePay Payment Gateway Integration - Official API Flow (No SDK)
+ * SafePay Payment Gateway Integration - Official API Flow
  * Official Documentation: https://apidocs.getsafepay.com/
  *
- * COMPLETE PAYMENT FLOW (4 STEPS):
+ * ⚠️ CRITICAL UNDERSTANDING: SafePay has TWO entity types:
  *
- * STEP 1: CREATE CUSTOMER (Optional but recommended)
+ * 1. CUSTOMER (cus_xxx): Created via /user/customers/v1/
+ *    - Purpose: Store billing info, pre-fill checkout
+ *    - Used for: mode = "payment" or "instrument"
+ *    - Response includes: merchant_api_key
+ *
+ * 2. USER (user_xxx): SafePay Shopper Account
+ *    - Purpose: Subscription billing, recurring payments
+ *    - Used for: mode = "subscription" or "unscheduled_cof"
+ *    - Created via: User registration/authentication endpoints
+ *
+ * CORRECT SUBSCRIPTION FLOW (SIMPLIFIED):
+ *
+ * STEP 1: CREATE CUSTOMER (for profile data)
  *    Endpoint: POST /user/customers/v1/
- *    Headers: X-SFPY-MERCHANT-SECRET
  *    Response: { token: "cus_xxx", merchant_api_key: "sec_xxx" }
- *    Purpose: Pre-fill checkout form and enable recurring payments
  *
- * STEP 2: CREATE PAYMENT SESSION (Tracker)
+ * STEP 2: CREATE PAYMENT TRACKER (to collect card + initial payment)
  *    Endpoint: POST /order/payments/v3/
- *    Headers: X-SFPY-MERCHANT-SECRET
- *    Body: { merchant_api_key, user, intent, mode, entry_mode, currency, amount }
- *    Response: { tracker: { token: "track_xxx", state, ... } }
- *    Purpose: Initialize payment session with amount and currency
+ *    Body: {
+ *      merchant_api_key: "sec_xxx",
+ *      user: "cus_xxx",  // Customer token for payment mode
+ *      mode: "payment",  // NOT "subscription" for first charge
+ *      intent: "CYBERSOURCE",
+ *      currency: "USD",
+ *      amount: 599
+ *    }
+ *    Purpose: Collect card details and process initial payment
+ *    Note: Card is automatically saved when user is provided
  *
- * STEP 3: GENERATE AUTHENTICATION TOKEN ⭐ CRITICAL!
- *    Endpoint: POST /client/passport/v1/token
- *    Headers: X-SFPY-MERCHANT-SECRET
- *    Body: {} (empty)
- *    Response: { data: "xnTyRgITVcHl..." }
- *    Purpose: Short-lived token required for checkout URL
+ * STEP 3: COMPLETE PAYMENT (Flex/Hosted Checkout)
+ *    - User enters card details
+ *    - Payment is processed
+ *    - Card token is returned in response: "card_xxx"
  *
- * STEP 4: GENERATE CHECKOUT URL
- *    Format: https://sandbox.getsafepay.pk/order/checkout?
- *            tracker={TRACKER_TOKEN}&
- *            tbt={AUTH_TOKEN}&
- *            env={sandbox|production}&
- *            source=custom&
- *            user_id={CUSTOMER_TOKEN}&
- *            redirect_url={SUCCESS_URL}&
- *            cancel_url={CANCEL_URL}
- *    Purpose: Redirect user to SafePay hosted checkout page
+ * STEP 4: CREATE SUBSCRIPTION WITH SAVED CARD
+ *    Endpoint: POST /order/payments/v3/
+ *    Body: {
+ *      merchant_api_key: "sec_xxx",
+ *      user: "cus_xxx",  // Same customer token
+ *      mode: "subscription",
+ *      entry_mode: "mit",  // Merchant-Initiated Transaction
+ *      intent: "CYBERSOURCE",
+ *      currency: "PKR",
+ *      amount: 1  // Nominal amount for subscription setup
+ *    }
+ *    Purpose: Create recurring billing using saved card
  *
- * CRITICAL REQUIREMENTS:
- *
- * 1. AUTHENTICATION:
- *    - All API calls MUST include X-SFPY-MERCHANT-SECRET header
- *    - Tracker API uses merchant_api_key from customer response
- *    - Auth token is required for checkout URL generation
- *
- * 2. CUSTOMER CREATION:
- *    - Response includes merchant_api_key (sec_ format)
- *    - This key is REQUIRED for tracker API calls
- *    - Store both customer token and merchant_api_key
- *
- * 3. TRACKER FIELD NAMES (CRITICAL):
- *    - Field name: 'user' (NOT 'customer')
- *    - Value: Customer token (cus_xxx format)
- *    - Using 'customer' field will cause API errors
- *
- * 4. MODE & ENTRY MODE:
- *    - mode: 'subscription' (enables recurring billing)
- *    - entry_mode: 'mit' (Merchant-Initiated Transaction)
- *    - This enables card vaulting for future charges
- *
- * 5. CHECKOUT URL STRUCTURE:
- *    - Base: https://sandbox.getsafepay.pk/order/checkout (NOT /checkout/{token})
- *    - Required params: tracker, tbt, env, source
- *    - Optional params: user_id, redirect_url, cancel_url
- *    - Domain: .pk TLD (Pakistan gateway)
- *
- * 6. REDIRECTS:
- *    - Local dev: http://localhost:5173 (Vite dev server)
- *    - Production: Use PUBLIC_BASE_URL env variable
- *    - URLs must be properly encoded
- *
- * 7. ERROR HANDLING:
- *    - If merchant_api_key is missing, recreate customer
- *    - Validate all token formats (cus_, sec_, track_)
- *    - Check auth token generation success
- *    - Provide clear error messages
+ * IMPORTANT NOTES:
+ * - merchant_api_key is ALWAYS required EXCEPT when mode = "subscription" AND using user_ token
+ * - For subscription with cus_ token, merchant_api_key IS required
+ * - Card tokenization happens automatically during payment when user field is provided
+ * - Subscription tracker token becomes the subscription reference
  */
 
 const SAFEPAY_API_URL = process.env.SAFEPAY_ENV === "production"
@@ -83,18 +66,42 @@ const SAFEPAY_API_URL = process.env.SAFEPAY_ENV === "production"
   : "https://sandbox.api.getsafepay.com";
 
 /**
- * SafePay Tracker Request for Subscriptions
+ * SafePay Tracker Request
  * Ref: https://apidocs.getsafepay.com/#tracker-api
+ *
+ * FIELD REQUIREMENTS BY MODE:
+ *
+ * mode: "payment" - One-time payment
+ *   - merchant_api_key: REQUIRED
+ *   - user: Customer token (cus_xxx) - OPTIONAL but enables card saving
+ *   - amount: REQUIRED
+ *
+ * mode: "subscription" - Recurring billing setup
+ *   - merchant_api_key: REQUIRED when using cus_ token
+ *   - user: Customer token (cus_xxx) - REQUIRED
+ *   - entry_mode: "mit" (Merchant-Initiated Transaction)
+ *   - amount: REQUIRED (can be nominal like 1 for verification)
+ *
+ * mode: "instrument" - Card tokenization only
+ *   - merchant_api_key: REQUIRED
+ *   - user: Customer token (cus_xxx) - REQUIRED
+ *   - amount: NOT required
+ *   - is_account_verification: true (for zero-amount auth)
+ *
+ * CRITICAL: The "user" field accepts EITHER:
+ * - cus_xxx (Customer token) - for most use cases
+ * - user_xxx (Shopper account) - for shopper-authenticated flows
  */
 interface SafePayTrackerRequest {
-  merchant_api_key: string; // From customer response
-  user: string; // Customer token (cus_xxx format) - field name is 'user' not 'customer'!
+  merchant_api_key: string; // Required except: mode="subscription" with user_xxx token
+  user: string; // Customer token (cus_xxx) or User token (user_xxx)
   intent: "CYBERSOURCE" | "MPGS" | "PAYFAST";
-  mode: "payment" | "subscription" | "instrument";
-  entry_mode?: "mit" | "cit" | "raw"; // Merchant-initiated, Customer-initiated, or Raw
+  mode: "payment" | "subscription" | "instrument" | "unscheduled_cof";
+  entry_mode?: "mit" | "cit" | "raw" | "flex"; // mit = Merchant-initiated, cit = Customer-initiated
   currency: string;
-  amount: number; // Amount in smallest unit (cents/paisa)
+  amount: number; // Amount in smallest unit (cents/paisa), not required for mode="instrument"
   metadata?: Record<string, any>;
+  is_account_verification?: boolean; // For zero-amount card verification
 }
 
 /**
@@ -366,6 +373,34 @@ export async function createSafePayPayment(opts: {
     const customerMerchantKey = customerResult.merchantApiKey; // sec_ format key from customer response
     console.log("✅ SafePay Customer ID:", safePayCustomerId);
 
+    // Add a small delay to ensure customer is fully registered in SafePay's system
+    // This helps prevent "customer not found" errors when immediately creating subscription
+    console.log("⏳ Waiting for customer to be fully registered...");
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+    console.log("✅ Customer should now be ready");
+
+    // VERIFICATION: Try to fetch the customer to ensure it exists in SafePay's system
+    console.log("🔍 Verifying customer exists in SafePay...");
+    try {
+      const verifyResponse = await fetch(`${SAFEPAY_API_URL}/user/customers/v1/${safePayCustomerId}`, {
+        method: "GET",
+        headers: {
+          "X-SFPY-MERCHANT-SECRET": merchantSecret,
+        },
+      });
+
+      if (verifyResponse.ok) {
+        const verifyData = await verifyResponse.json();
+        console.log("✅ Customer verified in SafePay system");
+        console.log("   Customer data:", JSON.stringify(verifyData.data, null, 2));
+      } else {
+        const verifyError = await verifyResponse.text();
+        console.warn("⚠️  Could not verify customer (but continuing anyway):", verifyError);
+      }
+    } catch (verifyError) {
+      console.warn("⚠️  Customer verification failed (but continuing anyway):", verifyError);
+    }
+
     // CRITICAL: Check if we have merchant_api_key
     // This is required for Tracker API - without it, subscription payment will fail
     if (!customerMerchantKey) {
@@ -414,47 +449,50 @@ export async function createSafePayPayment(opts: {
       return { ok: false, reason: "Invalid merchant API key format" };
     }
 
-    // SafePay Tracker API Request for Payment (Initial Setup)
-    // IMPORTANT: For subscription setup, use 'payment' mode first
-    // The 'subscription' mode is for automated recurring charges (MIT)
-    // Initial checkout should use 'payment' mode to collect card details
-    // CRITICAL FIELDS (from official docs):
-    // - merchant_api_key: From customer response (sec_ format)
-    // - user: Customer token (field name is 'user' not 'customer')
-    // - intent: Payment processor (CYBERSOURCE or MPGS)
-    // - mode: 'payment' (for initial checkout with card collection)
-    // - entry_mode: OPTIONAL (removed - requires PCI compliance for 'raw' mode)
-    // - currency: Currency code
-    // - amount: Amount in smallest unit
-    const trackerRequest: SafePayTrackerRequest = {
-      merchant_api_key: customerMerchantKey, // From customer response
-      user: safePayCustomerId, // Field name is 'user' not 'customer'!
+    // CORRECT SUBSCRIPTION FLOW (from official SafePay docs and working implementation):
+    //
+    // For subscription setup with Flex Microform:
+    // 1. Create tracker with mode: "payment" (NOT "subscription" or "instrument")
+    // 2. Use entry_mode: "flex" for embedded Cybersource Flex Microform
+    // 3. Customer enters card and completes initial payment
+    // 4. Card is automatically saved and associated with customer
+    // 5. Use saved card token to create subscription via Subscriptions API
+    //
+    // Why mode: "payment"?
+    // - Collects initial payment (e.g., first month/year)
+    // - Automatically saves card for future use
+    // - Works with Flex Microform (entry_mode: "flex")
+    // - Card token returned in authorization response
+    //
+    // Note: merchant_api_key is REQUIRED for tracker creation
+
+    const trackerRequest: any = {
+      merchant_api_key: customerMerchantKey, // Required for tracker creation
+      user: safePayCustomerId, // Customer token (cus_xxx format)
       intent: "CYBERSOURCE", // Payment processor
-      mode: "payment", // Use 'payment' mode for initial checkout
-      // entry_mode omitted - it's optional and 'raw' requires PCI compliance
+      mode: "payment", // Use payment mode for initial subscription payment
       currency: currency,
-      amount: amount,
+      amount: amount, // Actual subscription amount (first payment)
     };
 
     console.log("🚀 SafePay Tracker API Request:");
     console.log("   Endpoint: POST /order/payments/v3/");
-    console.log("   Mode: payment (initial subscription setup)");
-    console.log("   Entry Mode: omitted (optional - defaults to SafePay's choice)");
+    console.log("   Mode: payment (initial subscription payment)");
     console.log("   Intent: CYBERSOURCE");
-    console.log("   User Field: 'user' (not 'customer')");
+    console.log("   User Field: 'user' (customer token)");
     console.log("   Customer ID:", safePayCustomerId);
     console.log("   Amount:", amount);
     console.log("   Currency:", currency);
+    console.log("   Plan ID:", opts.planId);
     console.log("   Merchant API Key:", customerMerchantKey.substring(0, 10) + "...");
     console.log("   Full Request:", JSON.stringify(trackerRequest, null, 2));
 
     // Call SafePay Tracker API
-    // CRITICAL: Include X-SFPY-MERCHANT-SECRET header for authentication
     const response = await fetch(`${SAFEPAY_API_URL}/order/payments/v3/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-SFPY-MERCHANT-SECRET": merchantSecret, // Authentication header required!
+        "X-SFPY-MERCHANT-SECRET": merchantSecret, // Use environment secret
       },
       body: JSON.stringify(trackerRequest),
     });
@@ -483,9 +521,13 @@ export async function createSafePayPayment(opts: {
     const { data } = responseData;
 
     // Determine base URL for redirects early (needed for Flex)
-    const baseUrl = process.env.SAFEPAY_ENV === "production"
-      ? (process.env.PUBLIC_BASE_URL || "https://yourdomain.com")
-      : "http://localhost:5173";
+    // Use PUBLIC_BASE_URL if set, otherwise use production domain or localhost for dev
+    const baseUrl = process.env.PUBLIC_BASE_URL ||
+      (process.env.SAFEPAY_ENV === "production"
+        ? "https://vidgrabber.online"
+        : process.env.NODE_ENV === "production"
+          ? "https://vidgrabber.online"
+          : "http://localhost:5006"); // Use backend port, not Vite port
 
     console.log("✅ Tracker created successfully");
     console.log("   Tracker Token:", data.tracker.token);
@@ -494,7 +536,8 @@ export async function createSafePayPayment(opts: {
     console.log("   Entry Mode:", data.tracker.entry_mode);
     console.log("   Customer:", data.tracker.customer);
 
-    // Store payment record with tracker token (do this before Flex check)
+    // Store payment record with tracker token
+    // Note: This is card tokenization step - subscription will be created after successful tokenization
     await storage.createPayment({
       userId: opts.userId,
       provider: "safepay",
@@ -508,13 +551,15 @@ export async function createSafePayPayment(opts: {
         tracker_state: data.tracker.state,
         customer_id: data.tracker.customer,
         plan_id: opts.planId,
-        mode: "payment",
-        entry_mode: data.tracker.entry_mode || "unknown",
+        mode: data.tracker.mode, // Should be "payment" for initial subscription payment
+        entry_mode: data.tracker.entry_mode || "flex",
         intent: "CYBERSOURCE",
         reference,
         user_id: opts.userId,
         username: user.username,
         email: user.email,
+        is_subscription_setup: true, // Flag: subscription will be created after payment
+        subscription_amount: amount, // Store original subscription amount
       }),
       createdAt: new Date(),
     });
@@ -522,6 +567,7 @@ export async function createSafePayPayment(opts: {
     console.log("✅ Payment record created with tracker token");
     console.log("   Transaction ID:", reference);
     console.log("   Tracker Token:", data.tracker.token);
+    console.log("   Note: Card will be tokenized, then subscription created");
 
     // Check next_actions to see what SafePay expects
     if (data.tracker.next_actions) {
@@ -593,7 +639,7 @@ export async function createSafePayPayment(opts: {
                 tracker_state: data.tracker.state,
                 customer_id: data.tracker.customer,
                 plan_id: opts.planId,
-                mode: "payment",
+                mode: data.tracker.mode, // Should be "payment"
                 entry_mode: "flex",
                 intent: "CYBERSOURCE",
                 reference,
@@ -602,7 +648,7 @@ export async function createSafePayPayment(opts: {
                 email: user.email,
                 capture_context: captureContextJWT, // Store JWT string for frontend
                 next_action: "GENERATE_CAPTURE_CONTEXT",
-                full_capture_response: captureContextData.data // Store full response for debugging
+                full_capture_response: captureContextData.data, // Store full response for debugging
               }),
             });
           }

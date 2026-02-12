@@ -251,6 +251,63 @@ const templates = [
     textContent: 'Hi {{username}}! Your refund request #{{requestId}} has been received. Amount: {{amount}}. We will review it within 3-5 business days.',
     variables: { username: "User's name", requestId: "Request ID", paymentId: "Payment ID", amount: "Refund amount", reason: "Refund reason", submittedAt: "Submission date" },
     isActive: true
+  },
+  {
+    name: 'refund_completed',
+    subject: 'Refund Processed Successfully',
+    htmlContent: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+    .success-box { background: #d1fae5; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #10b981; }
+    .info-box { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Refund Processed</h1>
+    </div>
+    <div class="content">
+      <h2>Hi {{username}}!</h2>
+      <div class="success-box">
+        <p style="margin: 0; font-size: 18px;"><strong>Good news! Your refund has been processed successfully.</strong></p>
+      </div>
+      <p>We have completed the refund for your payment. The funds should appear in your account within 5-10 business days, depending on your payment provider.</p>
+      <div class="info-box">
+        <p><strong>Refund Details:</strong></p>
+        <ul>
+          <li>Refund ID: #{{refundId}}</li>
+          <li>Payment ID: {{paymentId}}</li>
+          <li>Amount: {{currency}} {{amount}}</li>
+          <li>Processed: {{completedAt}}</li>
+        </ul>
+      </div>
+      <p><strong>What happens next?</strong></p>
+      <ul>
+        <li>The refund has been initiated with your payment provider</li>
+        <li>You should see the funds in 5-10 business days</li>
+        <li>You'll receive a notification from your bank/card issuer</li>
+      </ul>
+      <p>If you have any questions or don't see the refund after 10 business days, please contact us at <a href="mailto:support@vidgrabber.online">support@vidgrabber.online</a></p>
+      <p>We hope to serve you better in the future!</p>
+      <p>Best regards,<br>The VidGrabber Team</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 VidGrabber. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+    textContent: 'Hi {{username}}! Your refund has been processed successfully. Refund ID: #{{refundId}}, Amount: {{currency}} {{amount}}. Funds will appear in 5-10 business days.',
+    variables: { username: "User's name", refundId: "Refund request ID", paymentId: "Payment ID", amount: "Refund amount", currency: "Currency code", completedAt: "Completion date" },
+    isActive: true
   }
 ];
 

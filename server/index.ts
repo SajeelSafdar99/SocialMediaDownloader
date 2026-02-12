@@ -154,12 +154,38 @@ app.use((req, res, next) => {
   if (isDev) {
     // Allow local dev + ngrok preview. Keep it minimal but compatible with Vite.
     const ngrokHost = req.get('host');
-    const connectSrc = ["'self'", 'ws:', 'wss:', 'https:', 'http://localhost:5173', 'ws://localhost:5173'];
+    const connectSrc = [
+      "'self'",
+      'ws:',
+      'wss:',
+      'https:',
+      'http://localhost:5173',
+      'ws://localhost:5173',
+      // Cybersource Flex API
+      'https://testflex.cybersource.com',
+      'https://flex.cybersource.com',
+      // Cardinal Commerce 3DS
+      'https://centinelapistag.cardinalcommerce.com',
+      'https://centinelapi.cardinalcommerce.com'
+    ];
     const scriptSrc = ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'blob:', 'https:'];
     const styleSrc = ["'self'", "'unsafe-inline'", 'https:'];
     const imgSrc = ["'self'", 'data:', 'blob:', 'https:'];
     const fontSrc = ["'self'", 'data:', 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com'];
-    const frameSrc = ["'self'", 'https://googleads.g.doubleclick.net', 'https://pagead2.googlesyndication.com', 'https://www.google.com', 'https://ep2.adtrafficquality.google', 'https://td.doubleclick.net'];
+    const frameSrc = [
+      "'self'",
+      'https://googleads.g.doubleclick.net',
+      'https://pagead2.googlesyndication.com',
+      'https://www.google.com',
+      'https://ep2.adtrafficquality.google',
+      'https://td.doubleclick.net',
+      // Cybersource Flex payment iframes
+      'https://testflex.cybersource.com',
+      'https://flex.cybersource.com',
+      // Cardinal Commerce 3DS iframes
+      'https://centinelapistag.cardinalcommerce.com',
+      'https://centinelapi.cardinalcommerce.com'
+    ];
 
     // If ngrok host exists, allow it explicitly for websockets as well.
     const csp = [

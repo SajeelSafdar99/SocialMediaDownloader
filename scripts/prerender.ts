@@ -20,11 +20,15 @@ type RouteSpec = {
 };
 
 const routes: RouteSpec[] = [
+  // Home page
   { route: '/', templateHtml: 'index.html', ssrEntry: 'entry-server.js', outFile: 'index.html' },
+
+  // Downloader pages (SEO-important)
   { route: '/instagram-downloader', templateHtml: 'instagram-downloader.html', ssrEntry: 'entry-server.js', outFile: 'instagram-downloader/index.html' },
   { route: '/tiktok-downloader', templateHtml: 'tiktok-downloader.html', ssrEntry: 'entry-server.js', outFile: 'tiktok-downloader/index.html' },
   { route: '/youtube-downloader', templateHtml: 'youtube-downloader.html', ssrEntry: 'entry-server.js', outFile: 'youtube-downloader/index.html' },
 
+  // Info/Legal pages (SEO-important)
   { route: '/about', templateHtml: 'about.html', ssrEntry: 'entry-server.js', outFile: 'about/index.html' },
   { route: '/contact', templateHtml: 'contact.html', ssrEntry: 'entry-server.js', outFile: 'contact/index.html' },
   { route: '/faq', templateHtml: 'faq.html', ssrEntry: 'entry-server.js', outFile: 'faq/index.html' },
@@ -32,7 +36,10 @@ const routes: RouteSpec[] = [
   { route: '/terms', templateHtml: 'terms.html', ssrEntry: 'entry-server.js', outFile: 'terms/index.html' },
   { route: '/dmca', templateHtml: 'dmca.html', ssrEntry: 'entry-server.js', outFile: 'dmca/index.html' },
 
-  // Blog routes
+  // Subscription page (SEO-important for pricing)
+  { route: '/subscribe', templateHtml: 'subscribe.html', ssrEntry: 'entry-server.js', outFile: 'subscribe/index.html' },
+
+  // Blog routes (SEO-important)
   { route: '/blog', templateHtml: 'blog.html', ssrEntry: 'entry-server.js', outFile: 'blog/index.html' },
 ];
 

@@ -17,7 +17,6 @@ export default function RequestRefund() {
   const { user } = useAuth();
   const [location] = useLocation();
   const [formData, setFormData] = useState({
-    paymentId: '',
     transactionId: '',
     amount: '',
     reason: '',
@@ -25,18 +24,22 @@ export default function RequestRefund() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Track if fields are pre-filled (should be read-only)
+  const [isPreFilled, setIsPreFilled] = useState(false);
+
   // Pre-fill form from URL parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const paymentId = params.get('paymentId');
+    const transactionId = params.get('transactionId');
     const amount = params.get('amount');
 
-    if (paymentId || amount) {
+    if (transactionId || amount) {
       setFormData(prev => ({
         ...prev,
-        paymentId: paymentId || prev.paymentId,
+        transactionId: transactionId || prev.transactionId,
         amount: amount || prev.amount,
       }));
+      setIsPreFilled(true); // Mark as pre-filled
     }
   }, [location]);
 
@@ -62,7 +65,6 @@ export default function RequestRefund() {
         },
         body: JSON.stringify({
           userId: user.id,
-          paymentId: formData.paymentId,
           transactionId: formData.transactionId,
           amount: parseFloat(formData.amount),
           reason: formData.reason,
@@ -206,29 +208,23 @@ export default function RequestRefund() {
                     <h2 className="text-2xl font-bold mb-6">Refund Request Form</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div>
-                        <Label htmlFor="paymentId">Payment ID *</Label>
-                        <Input
-                          id="paymentId"
-                          type="text"
-                          placeholder="e.g., PAY-123456"
-                          value={formData.paymentId}
-                          onChange={(e) => setFormData({ ...formData, paymentId: e.target.value })}
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Find this in your payment confirmation email
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="transactionId">Transaction ID</Label>
+                        <Label htmlFor="transactionId">Transaction ID *</Label>
                         <Input
                           id="transactionId"
                           type="text"
-                          placeholder="Optional transaction reference"
+                          placeholder="e.g., PREMIUM_4_1770786697172"
                           value={formData.transactionId}
                           onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
+                          required
+                          readOnly={isPreFilled}
+                          className={isPreFilled ? 'bg-gray-50 cursor-not-allowed' : ''}
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {isPreFilled
+                            ? 'Pre-filled from your payment history'
+                            : 'Find this in your payment history (Profile → Payment History)'
+                          }
+                        </p>
                       </div>
 
                       <div>
@@ -241,7 +237,14 @@ export default function RequestRefund() {
                           value={formData.amount}
                           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                           required
+                          readOnly={isPreFilled}
+                          className={isPreFilled ? 'bg-gray-50 cursor-not-allowed' : ''}
                         />
+                        {isPreFilled && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Pre-filled from your payment history
+                          </p>
+                        )}
                       </div>
 
                       <div>

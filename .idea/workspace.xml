@@ -5,7 +5,38 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e6a3add-36c7-4214-939e-115014a29588" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/GIT_HISTORY_RESET.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SAFEPAY_API_DOCUMENTATION.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SAFEPAY_SUBSCRIPTION_FLOW.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SAFEPAY_SUBSCRIPTION_FLOW_FIXED.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SUBSCRIPTION_FLOW_DIAGRAM.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/pages/PrerenderSubscribe.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/pages/ResetSubscription.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/pages/admin/ClearSubscription.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/pages/admin/clear-subscription.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/subscribe.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/reset-user-subscription.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/seed-blogs-updated.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/seed-blogs.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/view-subscription.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/start-prod.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/lib/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/lib/config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/Landing.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/Landing.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/Profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/RequestRefund.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/RequestRefund.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/ThreeDSAuth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/ThreeDSAuth.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/ThreeDSChallenge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/ThreeDSChallenge.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/init-email-templates.ts" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/init-email-templates.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/prerender.ts" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/prerender.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/refundRequestRoutes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/refundRequestRoutes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/emailService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/emailService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/safepayPaymentService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/safepayPaymentService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/safepaySubscriptionsService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/safepaySubscriptionsService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +50,13 @@
     <persistenceIdMap>
       <entry key="_/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader" value="33s2zLYZDBhjYfUVyW4CajBerOJ" />
     </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="chat-panel" value="Claude Sonnet 4.5" />
+      <entry key="agent-panel" value="Claude Sonnet 4.5" />
+      <entry key="edit-panel" value="GPT-5 mini" />
+    </selectedModels>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -58,10 +96,12 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHELLCHECK.PATH": "/Users/sajeelsafdar/Library/Application Support/JetBrains/PhpStorm2025.1/plugins/Shell Script/shellcheck",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/server",
+    "last_opened_file_path": "/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -70,21 +110,24 @@
     "npm.admin:create.executor": "Run",
     "npm.admin:delete.executor": "Run",
     "npm.admin:list.executor": "Run",
+    "npm.blog:seed.executor": "Run",
     "npm.build.executor": "Run",
     "npm.build:ssr.executor": "Run",
     "npm.dev.executor": "Run",
+    "npm.prerender.executor": "Run",
     "npm.prerender:blog.executor": "Run",
     "npm.server.executor": "Run",
     "npm.start.executor": "Run",
     "npm.test:proxy.executor": "Run",
     "npm.test:telegram.executor": "Run",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "/Users/sajeelsafdar/PhpstormProjects/SocialMediaDownloader/node_modules/typescript/lib",
+    "ts.external.directory.path": "/Applications/PhpStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/server" />
       <recent name="$PROJECT_DIR$/client/src" />
       <recent name="$PROJECT_DIR$/client" />
@@ -95,7 +138,7 @@
       <recent name="$PROJECT_DIR$/server" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.admin:list">
+  <component name="RunManager" selected="npm.blog:seed">
     <configuration name="admin:list" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
@@ -106,21 +149,21 @@
       <envs />
       <method v="2" />
     </configuration>
-    <configuration name="build:ssr" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+    <configuration name="blog:seed" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
       <scripts>
-        <script value="build:ssr" />
+        <script value="blog:seed" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
     </configuration>
-    <configuration name="prerender:blog" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+    <configuration name="prerender" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
       <scripts>
-        <script value="prerender:blog" />
+        <script value="prerender" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -148,19 +191,19 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.blog:seed" />
         <item itemvalue="npm.admin:list" />
+        <item itemvalue="npm.prerender" />
         <item itemvalue="npm.test:telegram" />
         <item itemvalue="npm.test:proxy" />
-        <item itemvalue="npm.prerender:blog" />
-        <item itemvalue="npm.build:ssr" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-PS-251.29188.4" />
-        <option value="bundled-php-predefined-a98d8de5180a-e5747d4f5a45-com.jetbrains.php.sharedIndexes-PS-251.29188.4" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PS-253.30387.85" />
+        <option value="bundled-php-predefined-a98d8de5180a-0e0d91225499-com.jetbrains.php.sharedIndexes-PS-253.30387.85" />
       </set>
     </attachedChunks>
   </component>
@@ -180,6 +223,10 @@
       <workItem from="1770173171456" duration="1867000" />
       <workItem from="1770256170106" duration="229000" />
       <workItem from="1770555814558" duration="40190000" />
+      <workItem from="1770753917813" duration="18906000" />
+      <workItem from="1770870081936" duration="66000" />
+      <workItem from="1770870403904" duration="273000" />
+      <workItem from="1770870795837" duration="7645000" />
     </task>
     <servers />
   </component>

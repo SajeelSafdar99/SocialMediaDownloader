@@ -112,6 +112,8 @@ export default defineConfig(({ mode }) => {
           privacy: path.resolve(__dirname, "client/privacy.html"),
           terms: path.resolve(__dirname, "client/terms.html"),
           dmca: path.resolve(__dirname, "client/dmca.html"),
+          subscribe: path.resolve(__dirname, "client/subscribe.html"),
+          blog: path.resolve(__dirname, "client/blog.html"),
         },
       },
     },

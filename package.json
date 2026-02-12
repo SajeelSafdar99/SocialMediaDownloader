@@ -24,8 +24,10 @@
     "admin:setup": "bash scripts/setup-admin.sh",
     "email:init": "tsx scripts/init-email-templates.ts",
     "email:check": "tsx scripts/check-email-templates.ts",
+    "blog:seed": "tsx scripts/seed-blogs.ts",
     "users:check-roles": "tsx scripts/check-user-roles.ts",
     "users:fix-roles": "tsx scripts/fix-user-roles.ts",
+    "subscription:reset": "tsx scripts/reset-subscription.ts",
     "test:telegram": "tsx test-telegram-bot.ts",
     "telegram:poll": "tsx test-telegram-polling.ts"
   },
@@ -97,6 +99,7 @@
     "input-otp": "^1.2.4",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.453.0",
+    "marked": "^17.0.1",
     "memorystore": "^1.6.7",
     "nanoid": "^5.1.6",
     "nodemailer": "^7.0.13",

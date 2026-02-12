@@ -107,8 +107,12 @@ export default function ThreeDSAuth({
         body: JSON.stringify({
           tracker,
           deviceFingerprint,
-          successUrl: `${window.location.origin}/subscribe?status=success&provider=safepay`,
-          failureUrl: `${window.location.origin}/subscribe?status=cancelled`,
+          successUrl: typeof window !== 'undefined'
+            ? `${window.location.origin}/subscribe?status=success&provider=safepay`
+            : '/subscribe?status=success&provider=safepay',
+          failureUrl: typeof window !== 'undefined'
+            ? `${window.location.origin}/subscribe?status=cancelled`
+            : '/subscribe?status=cancelled',
         }),
       });
 
@@ -174,7 +178,9 @@ export default function ThreeDSAuth({
     form.remove();
 
     // Listen for messages from the iframe
-    window.addEventListener('message', handleStepUpMessage);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('message', handleStepUpMessage);
+    }
   };
 
   const handleStepUpMessage = (event: MessageEvent) => {

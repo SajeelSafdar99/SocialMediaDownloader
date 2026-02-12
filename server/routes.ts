@@ -28,6 +28,7 @@ import { generateWhatsAppPremiumCode } from "./services/whatsappPremiumCodeServi
 import { completeWhatsAppPairing } from "./services/whatsappPairingService";
 import { createSafePayPayment} from "./services/safepayPaymentService";
 import { getPlan } from "./services/safepayPlansService";
+import { createSubscription } from "./services/safepaySubscriptionsService";
 import { requireAdmin } from "./middleware/adminAuth";
 import {
   apiLimiter,
@@ -417,11 +418,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('   Plan ID:', planId || 'not provided');
 
       // Determine frontend base URL for redirects
-      // In development, use Vite dev server (localhost:5173)
-      // In production, use PUBLIC_BASE_URL
-      const baseUrl = process.env.SAFEPAY_ENV === "production"
-        ? (process.env.PUBLIC_BASE_URL || "https://yourdomain.com")
-        : "http://localhost:5173"; // Vite dev server, NOT backend port!
+      // Priority: 1. PUBLIC_BASE_URL env var, 2. Request origin, 3. Default based on NODE_ENV
+      const baseUrl = process.env.PUBLIC_BASE_URL ||
+        req.headers.origin ||
+        req.headers.referer?.split('/').slice(0, 3).join('/') ||
+        (process.env.NODE_ENV === "production"
+          ? "https://vidgrabber.online"
+          : "http://localhost:5006");
 
       const result = await createSafePayPayment({
         userId,
@@ -692,24 +695,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('✅ User updated to premium');
           console.log('   Premium until:', premiumExpiresAt.toISOString());
 
-          // Fetch and store SafePay subscription token for future management
-          try {
-            const subResult = await searchSubscriptions({
-              user_ids: [`user_${userId}`],
-              statuses: ['ACTIVE', 'TRAILING'],
-              limit: 1,
-            });
+          // Try to create a subscription if we have a saved payment method
+          let subscriptionTokenStored = false;
+          const paymentMethodToken = statusResult.data?.action?.payment_method?.token;
 
-            if (subResult.ok && subResult.subscriptions && subResult.subscriptions.length > 0) {
-              const subscription = subResult.subscriptions[0];
-              await storage.updateUser(userId, {
-                safepaySubscriptionToken: subscription.token,
+          if (paymentMethodToken && planId) {
+            try {
+              console.log('🔄 Creating subscription with saved payment method...');
+              console.log('   Payment method token:', paymentMethodToken);
+              console.log('   Plan ID:', planId);
+
+              const { createSubscription } = await import('./services/safepaySubscriptionsService');
+
+              const user = await storage.getUser(userId);
+              const subResult = await createSubscription({
+                userId: `user_${userId}`,
+                planId: planId,
+                instrumentId: paymentMethodToken,
+                merchantApiKey: user?.safepayMerchantKey || '',
               });
-              console.log(`✅ Stored SafePay subscription token: ${subscription.token}`);
+
+              if (subResult.ok && subResult.subscription) {
+                await storage.updateUser(userId, {
+                  safepaySubscriptionToken: subResult.subscription.token,
+                  subscriptionPlanId: planId,
+                });
+                console.log(`✅ Subscription created and token stored: ${subResult.subscription.token}`);
+                subscriptionTokenStored = true;
+              } else {
+                console.error('❌ Failed to create subscription:', subResult.error);
+              }
+            } catch (subError) {
+              console.error('❌ Error creating subscription:', subError);
             }
-          } catch (subError) {
-            console.error('⚠️  Failed to fetch subscription token:', subError);
-            // Don't fail payment if subscription token fetch fails
+          }
+
+          // Try to store subscription token from tracker response first (fallback)
+          if (!subscriptionTokenStored && statusResult.data?.subscription?.token) {
+            await storage.updateUser(userId, {
+              safepaySubscriptionToken: statusResult.data.subscription.token,
+              subscriptionPlanId: planId || null,
+            });
+            console.log(`✅ Stored SafePay subscription token from tracker: ${statusResult.data.subscription.token}`);
+            subscriptionTokenStored = true;
+          }
+
+          // Fetch and store SafePay subscription token for future management (final fallback)
+          if (!subscriptionTokenStored) {
+            try {
+              console.log('🔍 Searching for subscription token...');
+              const subResult = await searchSubscriptions({
+                user_ids: [`user_${userId}`],
+                statuses: ['ACTIVE', 'TRAILING', 'INCOMPLETE'],
+                limit: 1,
+              });
+
+              if (subResult.ok && subResult.subscriptions && subResult.subscriptions.length > 0) {
+                const subscription = subResult.subscriptions[0];
+                await storage.updateUser(userId, {
+                  safepaySubscriptionToken: subscription.token,
+                  subscriptionPlanId: subscription.plan_id || planId || null,
+                });
+                console.log(`✅ Stored SafePay subscription token from search: ${subscription.token}`);
+                subscriptionTokenStored = true;
+              } else {
+                console.log('⚠️  No subscription found yet - SafePay might still be creating it');
+                console.log('   Token will be fetched when user visits profile page');
+              }
+            } catch (subError) {
+              console.error('⚠️  Failed to fetch subscription token:', subError);
+              // Don't fail payment if subscription token fetch fails
+            }
           }
 
           // Send subscription confirmation email with payment ID
@@ -894,9 +950,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('   Full tracker object:', JSON.stringify(authData.data?.tracker, null, 2));
 
           if (finalState === 'TRACKER_ENDED') {
-            console.log('💎 Payment completed! Updating user subscription...');
+            console.log('💎 Card tokenization completed! Now creating subscription...');
 
-            // Payment completed! Update user subscription
+            // Card tokenized! Now create SafePay subscription FIRST, then update user to premium
             const payment = await storage.getPaymentByProviderTransactionId(tracker);
             if (payment) {
               console.log('📄 Found payment record, ID:', payment.id);
@@ -948,11 +1004,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
 
               const premiumExpiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
-              console.log('💎 Updating user subscription...');
+
+              // Extract payment method token from authorization response
+              // This is the card/instrument token that we need to create subscription
+              const paymentMethodToken = authData.data?.action?.payment_method?.token;
+              console.log('💳 Payment method token from auth response:', paymentMethodToken);
+
+              // CREATE SUBSCRIPTION FIRST - only grant premium if subscription succeeds
+              let subscriptionToken: string | null = null;
+
+              if (paymentMethodToken && planId) {
+                console.log('🔄 Creating SafePay subscription tracker with saved card...');
+                console.log('   Payment method token:', paymentMethodToken);
+                console.log('   Plan ID:', planId);
+                console.log('   Customer ID:', paymentMeta.customer_id);
+
+                // Fetch user to get merchant key
+                const dbUser = await storage.getUser(userId);
+                if (!dbUser) {
+                  console.error('❌ User not found for subscription creation');
+                  throw new Error('User not found');
+                }
+
+                console.log('   Merchant API Key:', dbUser.safepayMerchantKey ? `${dbUser.safepayMerchantKey.substring(0, 10)}...` : 'NOT SET');
+
+                try {
+                  const subscriptionResult = await createSubscription({
+                    userId: paymentMeta.customer_id, // SafePay customer ID (cus_xxx)
+                    planId: planId,
+                    instrumentId: paymentMethodToken, // Saved card token
+                    merchantApiKey: dbUser.safepayMerchantKey || '' // User's merchant API key
+                  });
+
+                  if (subscriptionResult.ok && subscriptionResult.subscription) {
+                    const subscription = subscriptionResult.subscription;
+                    subscriptionToken = subscription.token;
+                    console.log('✅ Subscription tracker created successfully');
+                    console.log('   Subscription Token:', subscription.token);
+                    console.log('   Status:', subscription.status);
+                  } else {
+                    console.error('❌ Failed to create subscription:', subscriptionResult.error);
+                    // Subscription creation failed - DO NOT grant premium
+                    return res.status(400).json({
+                      ok: false,
+                      error: 'Failed to create subscription',
+                      details: subscriptionResult.error || 'Unknown error creating subscription'
+                    });
+                  }
+                } catch (error) {
+                  console.error('❌ Error creating subscription:', error);
+                  // Subscription creation failed - DO NOT grant premium
+                  return res.status(500).json({
+                    ok: false,
+                    error: 'Failed to create subscription',
+                    details: error instanceof Error ? error.message : 'Unknown error'
+                  });
+                }
+              } else {
+                console.error('❌ Missing payment method token or plan ID');
+                console.error('   Payment method token:', paymentMethodToken || 'MISSING');
+                console.error('   Plan ID:', planId || 'MISSING');
+                return res.status(400).json({
+                  ok: false,
+                  error: 'Missing required data for subscription',
+                  details: 'Payment method token or plan ID is missing'
+                });
+              }
+
+              // NOW update user to premium - only if subscription was created successfully
+              console.log('💎 Subscription created! Now updating user to premium...');
               console.log('   User ID:', userId);
               console.log('   Premium expires at:', premiumExpiresAt);
               console.log('   Duration:', durationDays, 'days');
-              console.log('   Plan ID:', planId || 'unknown');
+              console.log('   Plan ID:', planId);
+              console.log('   Subscription Token:', subscriptionToken);
               console.log('   Calling storage.updateUserSubscription...');
 
               const updateResult = await storage.updateUserSubscription({
@@ -967,12 +1092,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log('✅ User subscription updated successfully');
               console.log('   Update result:', JSON.stringify(updateResult, null, 2));
 
+              // Store subscription tracker token and payment method in user record
+              await storage.updateUser(userId, {
+                safepaySubscriptionToken: subscriptionToken, // Subscription tracker token (track_xxx)
+                subscriptionPlanId: planId,
+                safepayInstrumentToken: paymentMethodToken, // Store the payment method too
+                safepayInstrumentSavedAt: new Date(),
+              });
+
+              console.log('✅ Subscription token stored in database');
+
               return res.json({
                 ok: true,
                 authenticationStatus: 'FRICTIONLESS',
                 completed: true,
                 subscriptionUpdated: true,
-                message: 'Payment completed successfully and subscription activated'
+                subscriptionToken: subscriptionToken,
+                message: 'Card saved and subscription activated successfully'
               });
             } else {
               console.error('⚠️  Payment record not found for tracker:', tracker);
@@ -986,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('⚠️  Authorization completed but finalState was:', finalState, '(expected: TRACKER_ENDED)');
             return res.status(400).json({
               ok: false,
-              error: 'Payment authorization incomplete',
+              error: 'Card tokenization incomplete',
               currentState: finalState,
               expectedState: 'TRACKER_ENDED'
             });
@@ -1366,18 +1502,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ ok: false, error: 'User not authenticated' });
       }
 
-      // Search for user's active subscriptions
-      const result = await searchSubscriptions({
-        user_ids: [`user_${userId}`],
-        statuses: ['ACTIVE', 'TRAILING'],
-        limit: 1,
-      });
+      console.log(`🔍 Fetching subscription for user ${userId}`);
 
-      if (!result.ok) {
-        return res.status(400).json({ ok: false, error: result.error });
+      // Get user from database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ ok: false, error: 'User not found' });
       }
 
-      const subscription = result.subscriptions?.[0] || null;
+      // Check if user has premium and it hasn't expired
+      const now = new Date();
+      const premiumExpiry = user.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null;
+      const isActive = user.isPremium && premiumExpiry && premiumExpiry > now;
+
+      if (!isActive || !user.subscriptionPlanId) {
+        console.log(`⚠️  No active subscription for user ${userId}`);
+        return res.json({ ok: true, subscription: null });
+      }
+
+      // Fetch plan details from SafePay
+      const planResult = await getPlan(user.subscriptionPlanId);
+
+      let subscription = null;
+      if (isActive) {
+        // Build subscription object from our database
+        subscription = {
+          token: user.safepaySubscriptionToken || `local_sub_${userId}`,
+          user_id: `user_${userId}`,
+          plan_id: user.subscriptionPlanId,
+          status: user.subscriptionCancelledAt ? 'CANCELED' : 'ACTIVE',
+          current_period_end_date: premiumExpiry?.toISOString(),
+          canceled_at: user.subscriptionCancelledAt?.toISOString() || null,
+          cancel_at_period_end: user.subscriptionCancelAtPeriodEnd || false,
+          plan: planResult.ok && planResult.plan ? {
+            token: planResult.plan.token,
+            name: planResult.plan.name,
+            amount: planResult.plan.amount,
+            currency: planResult.plan.currency,
+            interval: planResult.plan.interval,
+            interval_count: planResult.plan.interval_count,
+          } : null,
+        };
+      }
+
+      console.log(`📊 Subscription for user ${userId}:`, {
+        found: !!subscription,
+        token: subscription?.token,
+        status: subscription?.status,
+        planId: subscription?.plan_id
+      });
+
+
       res.json({ ok: true, subscription });
     } catch (error: any) {
       console.error('Error getting user subscription:', error);
@@ -1912,6 +2087,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (e) {
       console.error('Delete download error:', e);
       res.status(500).json({ message: 'Failed to delete download' });
+    }
+  });
+
+  // --- DEV: RESET SUBSCRIPTION DATA ---
+  app.post('/api/dev/reset-subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = Number(req.user.id);
+
+      // Clear SafePay customer data
+      await storage.updateUser(userId, {
+        safepayCustomerId: null,
+        safepayMerchantKey: null,
+        safepaySubscriptionToken: null,
+        safepayInstrumentToken: null,
+        safepayInstrumentSavedAt: null,
+        isPremium: false,
+        premiumExpiresAt: null,
+        subscriptionProvider: null,
+        subscriptionPlanId: null,
+        subscriptionCancelledAt: null,
+        subscriptionCancelAtPeriodEnd: false,
+      });
+
+      // Delete all payment records for this user
+      const deletedPayments = await db.delete(payments).where(eq(payments.userId, userId));
+
+      console.log(`✅ Reset subscription data for user ${userId}`);
+      console.log(`   Deleted ${deletedPayments.rowCount || 0} payment record(s)`);
+
+      res.json({
+        ok: true,
+        message: 'Subscription data reset successfully',
+        deletedPayments: deletedPayments.rowCount || 0,
+      });
+    } catch (error: any) {
+      console.error('Reset subscription error:', error);
+      res.status(500).json({ message: 'Failed to reset subscription data' });
     }
   });
 

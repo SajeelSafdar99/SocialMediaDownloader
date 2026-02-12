@@ -501,7 +501,8 @@ export default function Profile() {
 
                         <div className="space-y-4">
                           {/* Cancel Subscription */}
-                          {subscription.cancel_at_period_end ? (
+                          {/* Trust database over SafePay API - only show cancelled if user.subscriptionCancelledAt exists */}
+                          {user.subscriptionCancelledAt ? (
                             <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800">
                               <div className="flex items-start gap-3">
                                 <i className="fas fa-info-circle text-orange-600 mt-1"></i>
@@ -511,7 +512,7 @@ export default function Profile() {
                                   </h4>
                                   <p className="text-sm text-orange-700 dark:text-orange-300">
                                     Your subscription has been cancelled. You'll retain access until{' '}
-                                    {formatDate(subscription.current_period_end_date || subscription.expiresAt!)}
+                                    {formatDate(user.premiumExpiresAt || subscription.current_period_end_date || subscription.expiresAt!)}
                                   </p>
                                 </div>
                               </div>
@@ -576,26 +577,47 @@ export default function Profile() {
                       </div>
                     ) : user.isPremium ? (
                       <div className="space-y-6">
-                        {/* User has premium access but subscription is cancelled */}
-                        <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800">
-                          <div className="flex items-start gap-3">
-                            <i className="fas fa-info-circle text-orange-600 mt-1 text-xl"></i>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-2">
-                                Subscription Cancelled
-                              </h4>
-                              <p className="text-sm text-orange-700 dark:text-orange-300 mb-2">
-                                Your subscription has been cancelled. You'll retain premium access until:
-                              </p>
-                              <p className="text-lg font-semibold text-orange-900 dark:text-orange-100">
-                                {user.premiumExpiresAt ? formatDate(user.premiumExpiresAt) : 'Not set'}
-                              </p>
-                              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                                After this date, you'll need to purchase a new subscription to regain premium access.
-                              </p>
+                        {/* User has premium access but no active subscription in SafePay */}
+                        {user.subscriptionCancelledAt ? (
+                          // Subscription was cancelled
+                          <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800">
+                            <div className="flex items-start gap-3">
+                              <i className="fas fa-info-circle text-orange-600 mt-1 text-xl"></i>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-2">
+                                  Subscription Cancelled
+                                </h4>
+                                <p className="text-sm text-orange-700 dark:text-orange-300 mb-2">
+                                  Your subscription has been cancelled. You'll retain premium access until:
+                                </p>
+                                <p className="text-lg font-semibold text-orange-900 dark:text-orange-100">
+                                  {user.premiumExpiresAt ? formatDate(user.premiumExpiresAt) : 'Not set'}
+                                </p>
+                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                                  After this date, you'll need to purchase a new subscription to regain premium access.
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          // Has premium but no active subscription (one-time purchase or subscription ended)
+                          <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
+                            <div className="flex items-start gap-3">
+                              <i className="fas fa-check-circle text-blue-600 mt-1 text-xl"></i>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                                  Premium Active
+                                </h4>
+                                <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                                  You have premium access until:
+                                </p>
+                                <p className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                                  {user.premiumExpiresAt ? formatDate(user.premiumExpiresAt) : 'Not set'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Refund option if eligible */}
                         {payments.some(p => isEligibleForRefund(p)) && (
@@ -609,16 +631,16 @@ export default function Profile() {
                                 Not satisfied? Request a full refund within 7 days of purchase
                               </p>
                             </div>
-                            <Button
-                              variant="outline"
-                              asChild
-                              className="border-green-500 text-green-600 hover:bg-green-500/10"
-                            >
-                              <a href="/request-refund">
-                                <i className="fas fa-undo mr-2"></i>
-                                Request Refund
-                              </a>
-                            </Button>
+                              <Button
+                                variant="outline"
+                                asChild
+                                className="border-green-500 text-green-600 hover:bg-green-500/10"
+                              >
+                                <a href={`/request-refund?transactionId=${payments.find(p => isEligibleForRefund(p))?.transactionId}&amount=${((payments.find(p => isEligibleForRefund(p))?.amount || 0) / 100).toFixed(2)}`}>
+                                  <i className="fas fa-undo mr-2"></i>
+                                  Request Refund
+                                </a>
+                              </Button>
                           </div>
                         )}
 
@@ -691,7 +713,7 @@ export default function Profile() {
                                     )}
                                   </div>
                                   <p className="text-sm text-muted-foreground font-mono">
-                                    Payment ID: #{payment.id}
+                                    Transaction ID: {payment.transactionId}
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     {formatDate(payment.createdAt)}
@@ -715,7 +737,7 @@ export default function Profile() {
                                   asChild
                                   className="border-green-500 text-green-600 hover:bg-green-500/10"
                                 >
-                                  <a href={`/request-refund?paymentId=${payment.id}&amount=${(payment.amount / 100).toFixed(2)}`}>
+                                  <a href={`/request-refund?transactionId=${payment.transactionId}&amount=${(payment.amount / 100).toFixed(2)}`}>
                                     <i className="fas fa-undo mr-2"></i>
                                     Request Refund
                                   </a>
